@@ -1,4 +1,9 @@
 <div class="container">
     <h1>Home Page</h1>
     <p>Here are the Homes...</p>
+
+    <h2>SMS Drivers</h2>
+    <div *ngFor="let driver of smsDrivers">
+        {{ driver.nama }} <!-- Ganti 'name' dengan field yang sesuai dari data Anda -->
+    </div>
 </div>

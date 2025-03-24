@@ -1,20 +1,20 @@
 // src/main.ts
 import { bootstrapApplication } from '@angular/platform-browser';
 import { AppComponent } from './app/app.component';
-import { environment } from './environments/environment'; // Pastikan Anda memiliki file environment
-import { initializeApp } from 'firebase/app';
-import { getAuth, provideAuth } from 'firebase/auth';
-import { getDatabase, provideDatabase } from 'firebase/database';
-import { provideFirebaseApp } from '@angular/fire'; // Pastikan ini diimpor dari @angular/fire
-
-// Inisialisasi Firebase
-const firebaseApp = initializeApp(environment.firebase);
+import { initializeApp } from 'firebase/app'; 
+import { provideFirebaseApp } from '@angular/fire/app'; 
+import { getAuth, provideAuth } from '@angular/fire/auth'; 
+import { getDatabase, provideDatabase } from '@angular/fire/database';
+import { firebaseConfig } from './app/firebase'; 
+import { routes } from './app/app.routes';
+import { provideRouter } from '@angular/router';
 
 const appConfig = {
   providers: [
-    provideFirebaseApp(() => firebaseApp), // Inisialisasi Firebase
-    provideAuth(() => getAuth(firebaseApp)), // Inisialisasi Auth
-    provideDatabase(() => getDatabase(firebaseApp)), // Inisialisasi Database
+    provideFirebaseApp(() => initializeApp(firebaseConfig)),
+    provideAuth(() => getAuth()), 
+    provideDatabase(() => getDatabase()),
+    provideRouter(routes)
   ],
 };
 
