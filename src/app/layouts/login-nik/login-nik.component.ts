@@ -1,23 +1,37 @@
-import { Component } from '@angular/core';
 import { Router } from '@angular/router';
+import { Component } from '@angular/core';
+import { Database, ref, get, child } from '@angular/fire/database';
 import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-login-nik',
-  imports: [],
   templateUrl: './login-nik.component.html',
-  styleUrl: './login-nik.component.css'
+  styleUrls: ['./login-nik.component.css']
 })
 export class LoginNikComponent {
   nik: string = ''; 
 
-  constructor(private router: Router) {}
+  constructor(private router: Router, private database: Database) {}
 
-  login(nik: string) {
-    if (nik == '105000464') {
-      this.router.navigate(['/home']); 
-    } else {
-      Swal.fire("Gagal","NIK tidak valid!","error"); 
+  async login(nik: string) {
+    const dbRef = ref(this.database);
+    
+    try {
+      const snapshot = await get(child(dbRef, 'sms_driver'));
+      if (snapshot.exists()) {
+        const users = snapshot.val();
+        const userExists = Object.values(users).some((user: any) => user.nik === nik);
+        
+        if (userExists) {
+          this.router.navigate(['/home']); 
+        } else {
+          Swal.fire("Gagal", "NIK tidak terdaftar di sistem!", "error"); 
+        }
+      } else {
+        Swal.fire("Gagal", "NIK tidak terdaftar di sistem!", "error");
+      }
+    } catch (error) {
+      Swal.fire("Error", "Terjadi kesalahan saat memeriksa NIK!", "error");
     }
   }
 }
