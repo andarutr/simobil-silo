@@ -3,6 +3,11 @@ import { Component } from '@angular/core';
 import { Database, ref, get, child } from '@angular/fire/database';
 import Swal from 'sweetalert2';
 
+interface User {
+  nik: string;
+  nama: string;
+}
+
 @Component({
   selector: 'app-login-nik',
   templateUrl: './login-nik.component.html',
@@ -18,12 +23,14 @@ export class LoginNikComponent {
     
     try {
       const snapshot = await get(child(dbRef, 'sms_driver'));
+
       if (snapshot.exists()) {
-        const users = snapshot.val();
-        const userExists = Object.values(users).some((user: any) => user.nik === nik);
-        
+        const users = snapshot.val() as Record<string, User>;
+        const userExists = Object.values(users).find((user: any) => user.nik === nik);
+
         if (userExists) {
-          this.router.navigate(['/home']); 
+          const nama = userExists.nama;
+          this.router.navigate(['/home'], { queryParams: { nik: nik, nama: nama } }); 
         } else {
           Swal.fire("Gagal", "NIK tidak terdaftar di sistem!", "error"); 
         }
