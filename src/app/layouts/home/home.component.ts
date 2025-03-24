@@ -19,11 +19,10 @@ interface User {
 })
 export class HomeComponent implements OnInit {
   nik: string | null = null;
-  nama: string | null = null;
+  nama: string | null = null; 
 
   constructor(private route: ActivatedRoute, private router: Router, private database: Database) {
-    // Register the locale data in the component
-    registerLocaleData(localeId); // Register the Indonesian locale data
+    registerLocaleData(localeId);
   }
 
   ngOnInit(): void {
@@ -35,7 +34,7 @@ export class HomeComponent implements OnInit {
 
   private fetchTransactionsAndNavigate(action: string): void {
     if (this.nik) {
-      const today = formatDate(new Date(), 'yyyy-MM-dd', 'id-ID'); // Use 'id-ID' for Indonesian locale
+      const today = formatDate(new Date(), 'yyyy-MM-dd', 'id-ID');
       const dbRef = ref(this.database);
       const smsTransactionRef = query(
           child(dbRef, 'sms_transaction'),
@@ -51,8 +50,9 @@ export class HomeComponent implements OnInit {
               });
 
               if (filteredTransactions.length > 0) {
-                  console.log('Filtered Transactions:', filteredTransactions);
-                  this.router.navigate(['/transaksi']); 
+                  // console.log('Filtered Transactions:', filteredTransactions);
+                  const transactionId = Object.keys(transactions).find(key => transactions[key].nik === this.nik && transactions[key].created_at.startsWith(today));
+                  this.router.navigate(['/transaksi'], { queryParams: { id: transactionId, nik: this.nik, nama: this.nama } }); 
               } else {
                   Swal.fire("Error", "Tidak ada transaksi untuk NIK ini pada hari ini.", "error");
               }
