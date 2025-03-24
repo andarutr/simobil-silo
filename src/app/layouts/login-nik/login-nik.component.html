@@ -1,10 +1,7 @@
 <div class="container">
-    <h1>Login Page</h1>
-    <form>
-      <div class="form-group">
-        <label for="nik">NIK</label>
-        <input type="text" class="form-control" id="nik" placeholder="Enter NIK">
-      </div>
-      <button type="submit" class="btn btn-primary">Login</button>
-    </form>
+  <h5 class="mb-4">Silahkan masukkan NIK Anda untuk memulai aplikasi.</h5>
+  <div class="form-group d-flex align-items-center">
+    <input type="text" class="form-control mr-2" id="nik" placeholder="Input NIK" #nikInput>&nbsp;&nbsp;&nbsp;
+    <button class="btn btn-success" (click)="login(nikInput.value)">LOGIN</button>
+  </div>
 </div>

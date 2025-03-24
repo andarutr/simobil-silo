@@ -1,8 +1,14 @@
-<div class="container">
-  <h1 class="mt-5">Welcome to My Angular App</h1>
-  <button class="btn btn-primary" (click)="navigateTo('/')">Home</button>
-  <button class="btn btn-primary" (click)="navigateTo('/detail')">Detail</button>
-  <button class="btn btn-primary" (click)="navigateTo('/login')">Login</button>
+<div class="container mt-5">
+  <div class="card shadow">
+    <div class="card-body p-5">
+      <!-- <button class="btn btn-primary" (click)="navigateTo('/')">Login</button>
+      <button class="btn btn-primary" (click)="navigateTo('/detail')">Detail</button> -->
+      <!-- <button class="btn btn-primary" (click)="navigateTo('/home')">Home</button> -->
+      <div style="text-align: center;">
+        <img src="silo_1.png" class="img-fluid rounded-circle" width="150">
+        <h5 class="mt-3 mb-5">DRIVER</h5>
+      </div>
+      <router-outlet></router-outlet>
+    </div>
+  </div>
 </div>
-
-<router-outlet></router-outlet>
