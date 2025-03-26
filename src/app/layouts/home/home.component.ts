@@ -52,7 +52,11 @@ export class HomeComponent implements OnInit {
               if (filteredTransactions.length > 0) {
                   // console.log('Filtered Transactions:', filteredTransactions);
                   const transactionId = Object.keys(transactions).find(key => transactions[key].nik === this.nik && transactions[key].created_at.startsWith(today));
-                  this.router.navigate(['/transaksi'], { queryParams: { id: transactionId, nik: this.nik, nama: this.nama } }); 
+                  if(action == "pasToPsg"){
+                    this.router.navigate(['/transaksi'], { queryParams: { id: transactionId, nik: this.nik, nama: this.nama } }); 
+                  }else{
+                    this.router.navigate(['/transaksi-pulang'], { queryParams: { id: transactionId, nik: this.nik, nama: this.nama } }); 
+                  }
               } else {
                   Swal.fire("Error", "Tidak ada transaksi untuk NIK ini pada hari ini.", "error");
               }

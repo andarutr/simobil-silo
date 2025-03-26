@@ -14,6 +14,7 @@ interface Transaction {
   templateUrl: './transaksi.component.html',
   styleUrls: ['./transaksi.component.css']
 })
+
 export class TransaksiComponent {
   id: string | null = null;
   nik: string | null = null;
@@ -62,7 +63,18 @@ export class TransaksiComponent {
 
                 const transactionRef = ref(this.database, `sms_transaction/${transactionKey}`);
                 await update(transactionRef, transactionData);
-                Swal.fire("Sukses", "Data berhasil diperbarui!", "success");
+                
+                Swal.fire({
+                    title: "Sukses",
+                    text: "Data berhasil diperbarui!",
+                    icon: "success",
+                    confirmButtonText: "OK",
+                    allowOutsideClick: false
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        this.router.navigate(['/home'], { queryParams: { nik: this.nik, nama: this.nama } });
+                    }
+                });
             } else {
                 Swal.fire("Error", "Transaksi tidak ditemukan!", "error");
             }
