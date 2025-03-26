@@ -32,35 +32,46 @@ export class TransaksiComponent {
   }
 
   async updateTransaction() {
-    const dbRef = ref(this.database, `sms_transaction/${this.id}`);
+    const dbRef = ref(this.database, 'sms_transaction');
     
     try {
-      const snapshot = await get(dbRef);
-  
-      if (snapshot.exists()) {
-        const transaction = snapshot.val() as Transaction;
-        
-        if (snapshot.key == this.id) {
-          const startTime = moment(transaction.mulai_pas_to_psg, "HH:mm");
-          const endTime = moment();
-          const duration = endTime.diff(startTime, 'minutes');
-          
-          const transactionData = {
-            tiba_pas_to_psg: endTime.format("HH:mm"), 
-            durasi_pas_to_psg: `${duration} menit` 
-          };
-  
-          await update(dbRef, transactionData);
-          Swal.fire("Sukses", "Data berhasil diperbarui!", "success");
+        const snapshot = await get(dbRef);
+
+        if (snapshot.exists()) {
+            const transactions = snapshot.val();
+            let transactionToUpdate = null;
+            let transactionKey = null;
+
+            for (const key in transactions) {
+                if (transactions[key].sms_truck_history_id === this.id) {
+                    transactionToUpdate = transactions[key];
+                    transactionKey = key;
+                    break;
+                }
+            }
+
+            if (transactionToUpdate) {
+                const startTime = moment(transactionToUpdate.mulai_pas_to_psg, "HH:mm");
+                const endTime = moment();
+                const duration = endTime.diff(startTime, 'minutes');
+
+                const transactionData = {
+                    tiba_pas_to_psg: endTime.format("HH:mm"), 
+                    durasi_pas_to_psg: `${duration} menit` 
+                };
+
+                const transactionRef = ref(this.database, `sms_transaction/${transactionKey}`);
+                await update(transactionRef, transactionData);
+                Swal.fire("Sukses", "Data berhasil diperbarui!", "success");
+            } else {
+                Swal.fire("Error", "Transaksi tidak ditemukan!", "error");
+            }
         } else {
-          Swal.fire("Error", "Key tidak ditemukan!", "error");
+            Swal.fire("Error", "Tidak ada transaksi ditemukan!", "error");
         }
-      } else {
-        Swal.fire("Error", "Transaksi tidak ditemukan!", "error");
-      }
     } catch (error) {
-      console.error("Error updating transaction:", error);
-      Swal.fire("Error", "Terjadi kesalahan: " + (error instanceof Error ? error.message : "Unknown error"), "error");
+        console.error("Error updating transaction:", error);
+        Swal.fire("Error", "Terjadi kesalahan: " + (error instanceof Error ? error.message : "Unknown error"), "error");
     }
   }
 }
