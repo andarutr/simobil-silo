@@ -32,48 +32,59 @@ export class HomeComponent implements OnInit {
     });
   }
 
-  private fetchTransactionsAndNavigate(action: string): void {
-    if (this.nik) {
-      const today = formatDate(new Date(), 'yyyy-MM-dd', 'id-ID');
-      const dbRef = ref(this.database);
-      const smsTransactionRef = query(
-          child(dbRef, 'sms_transaction'),
-          orderByKey() 
-      );
+  // Jangan hapus dulu!
+  // private fetchTransactionsAndNavigate(action: string): void {
+  //   if (this.nik) {
+  //     const today = formatDate(new Date(), 'yyyy-MM-dd', 'id-ID');
+  //     const dbRef = ref(this.database);
+  //     const smsTransactionRef = query(
+  //         child(dbRef, 'sms_transaction'),
+  //         orderByKey() 
+  //     );
 
-      get(smsTransactionRef).then(snapshot => {
-          if (snapshot.exists()) {
-              const transactions = snapshot.val() as Record<string, User>;
-              const filteredTransactions = Object.values(transactions).filter(transaction => {
-                  return transaction.nik === this.nik && 
-                        transaction.created_at.startsWith(today); 
-              });
+  //     get(smsTransactionRef).then(snapshot => {
+  //         if (snapshot.exists()) {
+  //             const transactions = snapshot.val() as Record<string, User>;
+  //             const filteredTransactions = Object.values(transactions).filter(transaction => {
+  //                 return transaction.nik === this.nik && 
+  //                       transaction.created_at.startsWith(today); 
+  //             });
 
-              if (filteredTransactions.length > 0) {
-                  // console.log('Filtered Transactions:', filteredTransactions);
-                  const transactionId = Object.keys(transactions).find(key => transactions[key].nik === this.nik && transactions[key].created_at.startsWith(today));
-                  if(action == "pasToPsg"){
-                    this.router.navigate(['/transaksi'], { queryParams: { id: transactionId, nik: this.nik, nama: this.nama } }); 
-                  }else{
-                    this.router.navigate(['/transaksi-pulang'], { queryParams: { id: transactionId, nik: this.nik, nama: this.nama } }); 
-                  }
-              } else {
-                  Swal.fire("Error", "Tidak ada transaksi untuk NIK ini pada hari ini.", "error");
-              }
-          } else {
-              Swal.fire("Error", "Tidak ada transaksi.", "error");
-          }
-      }).catch(error => {
-          console.error('Error fetching transactions:', error);
-      });
-    }
-  }
+  //             if (filteredTransactions.length > 0) {
+  //                 // console.log('Filtered Transactions:', filteredTransactions);
+  //                 const transactionId = Object.keys(transactions).find(key => transactions[key].nik === this.nik && transactions[key].created_at.startsWith(today));
+  //                 if(action == "pasToPsg"){
+  //                   this.router.navigate(['/transaksi'], { queryParams: { id: transactionId, nik: this.nik, nama: this.nama } }); 
+  //                 }else{
+  //                   this.router.navigate(['/transaksi-pulang'], { queryParams: { id: transactionId, nik: this.nik, nama: this.nama } }); 
+  //                 }
+  //             } else {
+  //                 Swal.fire("Error", "Tidak ada transaksi untuk NIK ini pada hari ini.", "error");
+  //             }
+  //         } else {
+  //             Swal.fire("Error", "Tidak ada transaksi.", "error");
+  //         }
+  //     }).catch(error => {
+  //         console.error('Error fetching transactions:', error);
+  //     });
+  //   }
+  // }
 
   gotoPasToPsg(): void {
-    this.fetchTransactionsAndNavigate('pasToPsg');
+    this.router.navigate(['/transaksi'], {
+      queryParams: {
+        nik: this.nik,
+        nama: this.nama
+      }
+    });
   }
 
   gotoPsgToPas(): void {
-    this.fetchTransactionsAndNavigate('psgToPas');
+    this.router.navigate(['/transaksi-pulang'], {
+      queryParams: {
+        nik: this.nik,
+        nama: this.nama
+      }
+    });
   }
 }

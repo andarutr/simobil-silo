@@ -128,6 +128,13 @@ export class ScanMobilComponent {
                 text: `Berhasil scan mobil dengan variant: ${decodedText}`,
                 icon: 'success',
                 confirmButtonText: 'OK'
+              }).then(() => {
+                this.router.navigate(['/home'], {
+                  queryParams: {
+                    nik: this.nik,
+                    nama: this.nama
+                  }
+                });
               });
             } catch (error: any) {
               Swal.fire({
