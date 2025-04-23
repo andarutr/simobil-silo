@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { Database, ref, get, update, set, push } from '@angular/fire/database';
+import { CommonModule } from '@angular/common';
 import Swal from 'sweetalert2';
 import moment from 'moment';
 
@@ -11,6 +12,7 @@ interface Transaction {
 
 @Component({
   selector: 'app-transaksi',
+  imports: [CommonModule],
   templateUrl: './transaksi.component.html',
   styleUrls: ['./transaksi.component.css']
 })
@@ -20,17 +22,48 @@ export class TransaksiComponent {
   nik: string | null = null;
   nama: string | null = null;
   smsTransactionKey: string | null = null;
-  
+  smsHistoryKey: string | null = null;
+  isTransactionFound: boolean = false;
+
   constructor(private router: Router, private route: ActivatedRoute, private database: Database) {
     this.route.queryParams.subscribe(params => {
       this.id = params['id'];
       this.nik = params['nik'];
       this.nama = params['nama'];
+
+      this.checkTransaction();
     });
   }
 
   goBack() {
     this.router.navigate(['/home'], { queryParams: { nik: this.nik, nama: this.nama } });
+  }
+
+  async checkTransaction() {
+    const dbRef = ref(this.database, 'sms_transaction');
+
+    try {
+      const snapshot = await get(dbRef);
+
+      if (snapshot.exists()) {
+        const transactions = snapshot.val();
+
+        for (const key in transactions) {
+          if (key === this.id) {
+            this.isTransactionFound = true; // Set status jika transaksi ditemukan
+            break;
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error checking transaction:', error);
+      Swal.fire({
+        title: 'Error',
+        text: 'Terjadi kesalahan saat memeriksa transaksi.',
+        icon: 'error',
+        confirmButtonText: 'OK'
+      });
+    }
   }
 
   async updateStartTransaction() {
@@ -103,7 +136,7 @@ export class TransaksiComponent {
             let transactionKey = null;
 
             for (const key in transactions) {
-                if (transactions[key].sms_truck_history_id === this.id) {
+                if (key === this.id) {
                     transactionToUpdate = transactions[key];
                     transactionKey = key;
                     break;
@@ -131,7 +164,7 @@ export class TransaksiComponent {
                     allowOutsideClick: false
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        this.router.navigate(['/home'], { queryParams: { nik: this.nik, nama: this.nama } });
+                        this.router.navigate(['/transaksi-pulang'], { queryParams: { id: transactionKey, nik: this.nik, nama: this.nama } });
                     }
                 });
             } else {
