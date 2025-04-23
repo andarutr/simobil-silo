@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
-import { Database, ref, get, update } from '@angular/fire/database';
+import { Database, ref, get, update, set, push } from '@angular/fire/database';
 import Swal from 'sweetalert2';
 import moment from 'moment';
 
@@ -19,6 +19,7 @@ export class TransaksiComponent {
   id: string | null = null;
   nik: string | null = null;
   nama: string | null = null;
+  smsTransactionKey: string | null = null;
   
   constructor(private router: Router, private route: ActivatedRoute, private database: Database) {
     this.route.queryParams.subscribe(params => {
@@ -32,7 +33,65 @@ export class TransaksiComponent {
     this.router.navigate(['/home'], { queryParams: { nik: this.nik, nama: this.nama } });
   }
 
-  async updateTransaction() {
+  async updateStartTransaction() {
+    const dbRef = ref(this.database, 'sms_transaction'); // Referensi ke Firebase
+  
+    try {
+      // Data yang akan disimpan
+      const transactionData = {
+        nik: this.nik || '-', // NIK pengguna (jika ada)
+        sms_truck_history_id: this.id || '-', // ID history dari query params
+        no_pengiriman: '-', // Default value
+        proses: 'otw_pas_to_psg', // Proses saat ini
+        mulai_pas_to_psg: moment().format('HH:mm'), // Waktu mulai dalam format jam:menit
+        durasi_pas_to_psg: '-', // Durasi default
+        tiba_pas_to_psg: '-', // Waktu tiba default
+        mulai_psg_to_pas: '-', // Default value
+        durasi_psg_to_pas: '-', // Default value
+        tiba_psg_to_pas: '-', // Default value
+        mulai_bongkar: '-', // Default value
+        mulai_bongkar_by: '-', // Default value
+        selesai_bongkar: '-', // Default value
+        selesai_bongkar_by: '-', // Default value
+        durasi_bongkar: '-', // Default value
+        mulai_cleaning: '-', // Default value
+        mulai_cleaning_by: '-', // Default value
+        selesai_cleaning: '-', // Default value
+        selesai_cleaning_by: '-', // Default value
+        durasi_cleaning: '-', // Default value
+        created_at: new Date().toISOString(), // Waktu pembuatan data
+        updated_at: new Date().toISOString() // Waktu pembaruan data
+      };
+  
+      // Push data ke Firebase
+      const newTransactionRef = push(dbRef); // Membuat key unik untuk data baru
+      this.smsTransactionKey = newTransactionRef.key; 
+      await set(newTransactionRef, transactionData);
+  
+      // Tampilkan notifikasi sukses
+      Swal.fire({
+        title: 'Sukses',
+        text: 'Data berhasil disimpan!',
+        icon: 'success',
+        confirmButtonText: 'OK',
+        allowOutsideClick: false
+      }).then((result) => {
+        if (result.isConfirmed) {
+          this.router.navigate(['/transaksi'], { queryParams: { id: this.smsTransactionKey, nik: this.nik, nama: this.nama } });
+        }
+      });
+    } catch (error) {
+      console.error('Error menyimpan transaksi:', error);
+      Swal.fire({
+        title: 'Error',
+        text: 'Terjadi kesalahan: ' + (error instanceof Error ? error.message : 'Unknown error'),
+        icon: 'error',
+        confirmButtonText: 'OK'
+      });
+    }
+  }
+
+  async updateEndTransaction() {
     const dbRef = ref(this.database, 'sms_transaction');
     
     try {
