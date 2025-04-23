@@ -30,7 +30,7 @@ export class LoginNikComponent {
 
         if (userExists) {
           const nama = userExists.nama;
-          this.router.navigate(['/home'], { queryParams: { nik: nik, nama: nama } }); 
+          this.router.navigate(['/scan-mobil'], { queryParams: { nik: nik, nama: nama } }); 
         } else {
           Swal.fire("Gagal", "NIK tidak terdaftar di sistem!", "error"); 
         }
