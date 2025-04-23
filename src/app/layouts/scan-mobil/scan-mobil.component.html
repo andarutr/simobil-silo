@@ -25,7 +25,7 @@
                                 </div>
                                 <div id="containerMobil"></div>
                                 <div id="containerMenu"></div>
-                                    <button class="btn btn-success ml-1 mt-3" (click)="openQRScannerMobil(lokasiTerdekat.value)">
+                                    <button [disabled]="isMobilScanned" class="btn btn-success ml-1 mt-3" (click)="openQRScannerMobil(lokasiTerdekat.value)">
                                         <i class="fas fa-qrcode"></i> SCAN MOBIL
                                     </button>&nbsp;&nbsp;
                                     <button

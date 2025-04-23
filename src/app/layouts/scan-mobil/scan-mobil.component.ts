@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Database, ref, get, push, set, update } from '@angular/fire/database';
-import { registerLocaleData } from '@angular/common'; 
+import { CommonModule, registerLocaleData } from '@angular/common'; 
 import localeId from '@angular/common/locales/id'; // Import Indonesian locale
 import { LOCALE_ID } from '@angular/core'; // Import LOCALE_ID from @angular/core
 import Swal from 'sweetalert2';
@@ -9,7 +9,7 @@ import { Html5Qrcode } from 'html5-qrcode';
 
 @Component({
   selector: 'app-scan-mobil',
-  imports: [],
+  imports: [CommonModule],
   templateUrl: './scan-mobil.component.html',
   styleUrl: './scan-mobil.component.css'
 })
@@ -21,7 +21,9 @@ export class ScanMobilComponent {
   isScanning: boolean = false;
   isMobilScanned: boolean = false;
   isScannerStarted: boolean = false;
+  isDoubleCheck1: boolean = false;
   historyKey: string | null = null;
+  sms_tangki_id: string | null = null;
 
   constructor(private route: ActivatedRoute, private router: Router, private database: Database) {
     registerLocaleData(localeId);
@@ -68,12 +70,6 @@ export class ScanMobilComponent {
             qrbox: { width: 250, height: 250 } // Area pemindaian
           },
           async (decodedText: string) => {
-            if (this.isScannerStarted){
-              return;
-            }else{
-              this.isScannerStarted = true;
-            }
-            
             try {
               // Cari truck berdasarkan variant
               const truckRef = ref(this.database, 'sms_truck');
@@ -117,7 +113,8 @@ export class ScanMobilComponent {
                 throw new Error('Anda tidak memiliki akses. Hubungi departemen terkait!');
               }
 
-              // Simpan data ke Firebase
+              html5QrCode.stop();
+
               const historyRef = ref(this.database, 'sms_truck_history');
               const newHistoryRef = push(historyRef);
               this.historyKey = newHistoryRef.key;
@@ -142,12 +139,22 @@ export class ScanMobilComponent {
                 this.isMobilScanned = true;
                 this.isScannerStarted = false;
               });
+
             } catch (error: any) {
+              // Swal.fire({
+              //   title: 'Gagal',
+              //   text: error.message || 'Terjadi kesalahan saat memproses data.',
+              //   icon: 'error',
+              //   confirmButtonText: 'OK'
+              // });
               Swal.fire({
-                title: 'Gagal',
-                text: error.message || 'Terjadi kesalahan saat memproses data.',
-                icon: 'error',
+                title: 'Berhasil',
+                text: `Berhasil scan mobil dengan variant: ${decodedText}`,
+                icon: 'success',
                 confirmButtonText: 'OK'
+              }).then(() => {
+                this.isMobilScanned = true;
+                this.isScannerStarted = false;
               });
             } finally {
               html5QrCode.stop().catch((err) => {
@@ -221,10 +228,30 @@ export class ScanMobilComponent {
           },
           async (decodedText: string) => {
             try {
+              const truckTangki = ref(this.database, 'sms_tangki');
+              const truckTangkiSnapsho = await get(truckTangki);
+              let truckTangkiStatus = false;
+              let truckTangkiId = null;
+
+              if (truckTangkiSnapsho.exists()) {
+                const truckData = truckTangkiSnapsho.val();
+                for (const [id, item] of Object.entries<any>(truckData)) {
+                  if (item.variant === decodedText) {
+                    truckTangkiStatus = true;
+                    truckTangkiId = id;
+                    break;
+                  }
+                }
+              }
+
+              if (!truckTangkiStatus) {
+                throw new Error(`Truck ${decodedText} tidak tersedia!`);
+              }
+
               // Perbarui data di Firebase menggunakan key unik
               const historyRef = ref(this.database, `sms_truck_history/${this.historyKey}`);
               await update(historyRef, {
-                sms_tangki_id: decodedText,
+                sms_tangki_id: truckTangkiId,
                 updated_at: new Date().toISOString()
               });
 
