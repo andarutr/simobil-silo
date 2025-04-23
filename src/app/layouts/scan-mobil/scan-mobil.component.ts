@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Database, ref, get, push, set } from '@angular/fire/database';
+import { Database, ref, get, push, set, update } from '@angular/fire/database';
 import { registerLocaleData } from '@angular/common'; 
 import localeId from '@angular/common/locales/id'; // Import Indonesian locale
 import { LOCALE_ID } from '@angular/core'; // Import LOCALE_ID from @angular/core
@@ -19,6 +19,9 @@ export class ScanMobilComponent {
   lokasiTerdekat: string | null = null;
 
   isScanning: boolean = false;
+  isMobilScanned: boolean = false;
+  isScannerStarted: boolean = false;
+  historyKey: string | null = null;
 
   constructor(private route: ActivatedRoute, private router: Router, private database: Database) {
     registerLocaleData(localeId);
@@ -31,7 +34,7 @@ export class ScanMobilComponent {
     });
   }
 
-  openQRScanner(lokasiTerdekat: string): void {
+  openQRScannerMobil(lokasiTerdekat: string): void {
     if (!lokasiTerdekat) {
       Swal.fire({
         title: 'Error',
@@ -65,6 +68,12 @@ export class ScanMobilComponent {
             qrbox: { width: 250, height: 250 } // Area pemindaian
           },
           async (decodedText: string) => {
+            if (this.isScannerStarted){
+              return;
+            }else{
+              this.isScannerStarted = true;
+            }
+            
             try {
               // Cari truck berdasarkan variant
               const truckRef = ref(this.database, 'sms_truck');
@@ -111,6 +120,7 @@ export class ScanMobilComponent {
               // Simpan data ke Firebase
               const historyRef = ref(this.database, 'sms_truck_history');
               const newHistoryRef = push(historyRef);
+              this.historyKey = newHistoryRef.key;
               set(newHistoryRef, {
                 sms_truck_id: truckId,
                 sms_driver_id: driverId,
@@ -129,10 +139,108 @@ export class ScanMobilComponent {
                 icon: 'success',
                 confirmButtonText: 'OK'
               }).then(() => {
-                this.router.navigate(['/home'], {
+                this.isMobilScanned = true;
+                this.isScannerStarted = false;
+              });
+            } catch (error: any) {
+              Swal.fire({
+                title: 'Gagal',
+                text: error.message || 'Terjadi kesalahan saat memproses data.',
+                icon: 'error',
+                confirmButtonText: 'OK'
+              });
+            } finally {
+              html5QrCode.stop().catch((err) => {
+                console.error('Gagal menghentikan QR Code scanner:', err);
+              });
+              this.isScanning = false;
+              this.isScannerStarted = false;
+            }
+          },
+          (error: any) => {
+            if (!isErrorShown) {
+              console.error('Error saat memindai QR Code:', error);
+              isErrorShown = true;
+            }
+          }
+        ).catch((err) => {
+          console.error('Gagal memulai QR Code scanner:', err);
+          Swal.fire({
+            title: 'Error',
+            text: 'Gagal memulai kamera. Pastikan kamera tersedia dan izin diberikan.',
+            icon: 'error',
+            confirmButtonText: 'OK'
+          });
+          this.isScanning = false;
+        });
+      },
+      willClose: () => {
+        const video = document.getElementById('qr-reader') as HTMLElement;
+        if (video) {
+          const scanner = new Html5Qrcode('qr-reader');
+          scanner.stop().catch((err) => {
+            console.error('Gagal menghentikan QR Code scanner:', err);
+          });
+        }
+      }
+    });
+  }
+
+  openQRScannerTangki(): void {
+    if (!this.isMobilScanned || !this.historyKey) {
+      Swal.fire({
+        title: 'Error',
+        text: 'Silakan scan mobil terlebih dahulu!',
+        icon: 'error',
+        confirmButtonText: 'OK'
+      });
+      return;
+    }
+
+    this.isScanning = true;
+
+    Swal.fire({
+      title: 'Scan QR Code Tangki',
+      html: `
+        <div id="qr-reader-tangki" style="width: 100%; height: 300px;"></div>
+        <p class="mt-3">Arahkan kamera ke QR Code tangki.</p>
+      `,
+      showConfirmButton: false,
+      showCancelButton: true,
+      cancelButtonText: 'Batal',
+      allowOutsideClick: false,
+      didOpen: () => {
+        const html5QrCode = new Html5Qrcode('qr-reader-tangki');
+        let isErrorShown = false;
+
+        html5QrCode.start(
+          { facingMode: 'user' }, // Gunakan kamera depan
+          {
+            fps: 10, // Frame rate
+            qrbox: { width: 250, height: 250 } // Area pemindaian
+          },
+          async (decodedText: string) => {
+            try {
+              // Perbarui data di Firebase menggunakan key unik
+              const historyRef = ref(this.database, `sms_truck_history/${this.historyKey}`);
+              await update(historyRef, {
+                sms_tangki_id: decodedText,
+                updated_at: new Date().toISOString()
+              });
+
+              // Tampilkan notifikasi sukses
+              Swal.close();
+              Swal.fire({
+                title: 'Berhasil',
+                text: `Berhasil scan tangki dengan ID: ${decodedText}`,
+                icon: 'success',
+                confirmButtonText: 'OK'
+              }).then(() => {
+                this.router.navigate(['/transaksi'], {
                   queryParams: {
+                    id: this.historyKey,
                     nik: this.nik,
-                    nama: this.nama
+                    nama: this.nama,
                   }
                 });
               });
@@ -168,9 +276,9 @@ export class ScanMobilComponent {
         });
       },
       willClose: () => {
-        const video = document.getElementById('qr-reader') as HTMLElement;
+        const video = document.getElementById('qr-reader-tangki') as HTMLElement;
         if (video) {
-          const scanner = new Html5Qrcode('qr-reader');
+          const scanner = new Html5Qrcode('qr-reader-tangki');
           scanner.stop().catch((err) => {
             console.error('Gagal menghentikan QR Code scanner:', err);
           });
