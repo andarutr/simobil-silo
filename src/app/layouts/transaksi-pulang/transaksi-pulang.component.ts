@@ -75,7 +75,7 @@ export class TransaksiPulangComponent {
 
     return false;
   }
-  
+
   async checkTransaction() {
     const dbRef = ref(this.database, `sms_transaction/${this.id}`);
 
@@ -123,7 +123,7 @@ export class TransaksiPulangComponent {
         const selectedFacingMode = useRearCamera ? 'environment' : 'user';
 
         html5QrCode.start({
-            facingMode: selectedFacingMode
+            facingMode: 'user'
           }, // Gunakan kamera depan
           {
             fps: 10, // Frame rate
@@ -230,7 +230,7 @@ export class TransaksiPulangComponent {
         const selectedFacingMode = useRearCamera ? 'environment' : 'user';
 
         html5QrCode.start({
-            facingMode: selectedFacingMode
+            facingMode: 'user'
           }, // Gunakan kamera depan
           {
             fps: 10, // Frame rate

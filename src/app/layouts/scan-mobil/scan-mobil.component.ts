@@ -1,11 +1,30 @@
-import { Component } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
-import { Database, ref, get, push, set, update } from '@angular/fire/database';
-import { CommonModule, registerLocaleData } from '@angular/common'; 
+import {
+  Component
+} from '@angular/core';
+import {
+  ActivatedRoute,
+  Router
+} from '@angular/router';
+import {
+  Database,
+  ref,
+  get,
+  push,
+  set,
+  update
+} from '@angular/fire/database';
+import {
+  CommonModule,
+  registerLocaleData
+} from '@angular/common';
 import localeId from '@angular/common/locales/id'; // Import Indonesian locale
-import { LOCALE_ID } from '@angular/core'; // Import LOCALE_ID from @angular/core
+import {
+  LOCALE_ID
+} from '@angular/core'; // Import LOCALE_ID from @angular/core
 import Swal from 'sweetalert2';
-import { Html5Qrcode } from 'html5-qrcode';
+import {
+  Html5Qrcode
+} from 'html5-qrcode';
 
 @Component({
   selector: 'app-scan-mobil',
@@ -15,7 +34,7 @@ import { Html5Qrcode } from 'html5-qrcode';
 })
 export class ScanMobilComponent {
   nik: string | null = null;
-  nama: string | null = null; 
+  nama: string | null = null;
   lokasiTerdekat: string | null = null;
 
   isScanning: boolean = false;
@@ -36,6 +55,17 @@ export class ScanMobilComponent {
     });
   }
 
+  private isMobileDevice(): boolean {
+    if (navigator.maxTouchPoints && navigator.maxTouchPoints > 0) {
+      return true;
+    }
+    if ('ontouchstart' in window) {
+        return true;
+    }
+
+    return false;
+  }
+  
   openQRScannerMobil(lokasiTerdekat: string): void {
     if (!lokasiTerdekat) {
       Swal.fire({
@@ -64,118 +94,125 @@ export class ScanMobilComponent {
         let isErrorShown = false;
         let processingScan = false;
 
-        html5QrCode.start(
-          { facingMode: 'user' }, // Gunakan kamera depan
+        const useRearCamera = this.isMobileDevice();
+        const selectedFacingMode = useRearCamera ? 'environment' : 'user';
+
+        html5QrCode.start({
+            facingMode: selectedFacingMode
+          }, // Gunakan kamera depan
           {
             fps: 10, // Frame rate
-            qrbox: { width: 250, height: 250 } // Area pemindaian
+            qrbox: {
+              width: 250,
+              height: 250
+            } // Area pemindaian
           },
           async (decodedText: string) => {
-            if (processingScan) {
-              console.log('Scan sudah diproses, mengabaikan deteksi berikutnya.');
-              return; // Keluar jika sudah memproses
-            }
-            processingScan = true;
+              if (processingScan) {
+                console.log('Scan sudah diproses, mengabaikan deteksi berikutnya.');
+                return; // Keluar jika sudah memproses
+              }
+              processingScan = true;
 
-            try {
-              await html5QrCode.stop().catch(err => console.error("Gagal menghentikan scanner:", err));
+              try {
+                await html5QrCode.stop().catch(err => console.error("Gagal menghentikan scanner:", err));
 
-              const truckRef = ref(this.database, 'sms_truck');
-              const truckSnapshot = await get(truckRef);
-              let truckStatus = false;
-              let truckId = null;
+                const truckRef = ref(this.database, 'sms_truck');
+                const truckSnapshot = await get(truckRef);
+                let truckStatus = false;
+                let truckId = null;
 
-              if (truckSnapshot.exists()) {
-                const truckData = truckSnapshot.val();
-                for (const [id, item] of Object.entries<any>(truckData)) {
-                  if (item.variant === decodedText) {
-                    truckStatus = true;
-                    truckId = id;
-                    break;
+                if (truckSnapshot.exists()) {
+                  const truckData = truckSnapshot.val();
+                  for (const [id, item] of Object.entries < any > (truckData)) {
+                    if (item.variant === decodedText) {
+                      truckStatus = true;
+                      truckId = id;
+                      break;
+                    }
                   }
                 }
-              }
 
-              if (!truckStatus) {
-                throw new Error(`Truck ${decodedText} tidak tersedia!`);
-              }
+                if (!truckStatus) {
+                  throw new Error(`Truck ${decodedText} tidak tersedia!`);
+                }
 
-              // Cari driver berdasarkan NIK
-              const driverRef = ref(this.database, 'sms_driver');
-              const driverSnapshot = await get(driverRef);
-              let driverStatus = false;
-              let driverId = null;
+                // Cari driver berdasarkan NIK
+                const driverRef = ref(this.database, 'sms_driver');
+                const driverSnapshot = await get(driverRef);
+                let driverStatus = false;
+                let driverId = null;
 
-              if (driverSnapshot.exists()) {
-                const driverData = driverSnapshot.val();
-                for (const [id, item] of Object.entries<any>(driverData)) {
-                  if (item.nik === this.nik) {
-                    driverStatus = true;
-                    driverId = id;
-                    break;
+                if (driverSnapshot.exists()) {
+                  const driverData = driverSnapshot.val();
+                  for (const [id, item] of Object.entries < any > (driverData)) {
+                    if (item.nik === this.nik) {
+                      driverStatus = true;
+                      driverId = id;
+                      break;
+                    }
                   }
                 }
-              }
 
-              if (!driverStatus) {
-                throw new Error('Anda tidak memiliki akses. Hubungi departemen terkait!');
-              }
+                if (!driverStatus) {
+                  throw new Error('Anda tidak memiliki akses. Hubungi departemen terkait!');
+                }
 
-              const historyRef = ref(this.database, 'sms_truck_history');
-              const newHistoryRef = push(historyRef);
-              this.historyKey = newHistoryRef.key;
-              set(newHistoryRef, {
-                sms_truck_id: truckId,
-                sms_driver_id: driverId,
-                sms_tangki_id: '-',
-                shift: this.getCurrentShift(),
-                status: 'active',
-                lokasi_terakhir: this.lokasiTerdekat,
-                created_at: new Date().toISOString()
-              });
+                const historyRef = ref(this.database, 'sms_truck_history');
+                const newHistoryRef = push(historyRef);
+                this.historyKey = newHistoryRef.key;
+                set(newHistoryRef, {
+                  sms_truck_id: truckId,
+                  sms_driver_id: driverId,
+                  sms_tangki_id: '-',
+                  shift: this.getCurrentShift(),
+                  status: 'active',
+                  lokasi_terakhir: this.lokasiTerdekat,
+                  created_at: new Date().toISOString()
+                });
 
-              // Tampilkan notifikasi sukses
-              Swal.close();
-              Swal.fire({
-                title: 'Berhasil',
-                text: `Berhasil scan mobil dengan variant: ${decodedText}`,
-                icon: 'success',
-                confirmButtonText: 'OK'
-              }).then(() => {
-                this.isMobilScanned = true;
+                // Tampilkan notifikasi sukses
+                Swal.close();
+                Swal.fire({
+                  title: 'Berhasil',
+                  text: `Berhasil scan mobil dengan variant: ${decodedText}`,
+                  icon: 'success',
+                  confirmButtonText: 'OK'
+                }).then(() => {
+                  this.isMobilScanned = true;
+                  this.isScannerStarted = false;
+                });
+
+              } catch (error: any) {
+                // Swal.fire({
+                //   title: 'Gagal',
+                //   text: error.message || 'Terjadi kesalahan saat memproses data.',
+                //   icon: 'error',
+                //   confirmButtonText: 'OK'
+                // });
+                Swal.fire({
+                  title: 'Berhasil',
+                  text: `Berhasil scan mobil dengan variant: ${decodedText}`,
+                  icon: 'success',
+                  confirmButtonText: 'OK'
+                }).then(() => {
+                  this.isMobilScanned = true;
+                  this.isScannerStarted = false;
+                });
+              } finally {
+                html5QrCode.stop().catch((err) => {
+                  console.error('Gagal menghentikan QR Code scanner:', err);
+                });
+                this.isScanning = false;
                 this.isScannerStarted = false;
-              });
-
-            } catch (error: any) {
-              // Swal.fire({
-              //   title: 'Gagal',
-              //   text: error.message || 'Terjadi kesalahan saat memproses data.',
-              //   icon: 'error',
-              //   confirmButtonText: 'OK'
-              // });
-              Swal.fire({
-                title: 'Berhasil',
-                text: `Berhasil scan mobil dengan variant: ${decodedText}`,
-                icon: 'success',
-                confirmButtonText: 'OK'
-              }).then(() => {
-                this.isMobilScanned = true;
-                this.isScannerStarted = false;
-              });
-            } finally {
-              html5QrCode.stop().catch((err) => {
-                console.error('Gagal menghentikan QR Code scanner:', err);
-              });
-              this.isScanning = false;
-              this.isScannerStarted = false;
+              }
+            },
+            (error: any) => {
+              if (!isErrorShown) {
+                console.error('Error saat memindai QR Code:', error);
+                isErrorShown = true;
+              }
             }
-          },
-          (error: any) => {
-            if (!isErrorShown) {
-              console.error('Error saat memindai QR Code:', error);
-              isErrorShown = true;
-            }
-          }
         ).catch((err) => {
           console.error('Gagal memulai QR Code scanner:', err);
           Swal.fire({
@@ -227,101 +264,108 @@ export class ScanMobilComponent {
         let isErrorShown = false;
         let processingScan = false;
 
-        html5QrCode.start(
-          { facingMode: 'user' }, // Gunakan kamera depan
+        const useRearCamera = this.isMobileDevice();
+        const selectedFacingMode = useRearCamera ? 'environment' : 'user';
+
+        html5QrCode.start({
+            facingMode: selectedFacingMode
+          }, // Gunakan kamera depan
           {
             fps: 10, // Frame rate
-            qrbox: { width: 250, height: 250 } // Area pemindaian
+            qrbox: {
+              width: 250,
+              height: 250
+            } // Area pemindaian
           },
           async (decodedText: string) => {
-            if (processingScan) {
-              console.log('Scan sudah diproses, mengabaikan deteksi berikutnya.');
-              return; 
-            }
+              if (processingScan) {
+                console.log('Scan sudah diproses, mengabaikan deteksi berikutnya.');
+                return;
+              }
 
-            processingScan = true;
+              processingScan = true;
 
-            try {
-              await html5QrCode.stop().catch(err => console.error("Gagal menghentikan scanner:", err));
+              try {
+                await html5QrCode.stop().catch(err => console.error("Gagal menghentikan scanner:", err));
 
-              const truckTangki = ref(this.database, 'sms_tangki');
-              const truckTangkiSnapsho = await get(truckTangki);
-              let truckTangkiStatus = false;
-              let truckTangkiId = null;
+                const truckTangki = ref(this.database, 'sms_tangki');
+                const truckTangkiSnapsho = await get(truckTangki);
+                let truckTangkiStatus = false;
+                let truckTangkiId = null;
 
-              if (truckTangkiSnapsho.exists()) {
-                const truckData = truckTangkiSnapsho.val();
-                for (const [id, item] of Object.entries<any>(truckData)) {
-                  if (item.variant === decodedText) {
-                    truckTangkiStatus = true;
-                    truckTangkiId = id;
-                    break;
+                if (truckTangkiSnapsho.exists()) {
+                  const truckData = truckTangkiSnapsho.val();
+                  for (const [id, item] of Object.entries < any > (truckData)) {
+                    if (item.variant === decodedText) {
+                      truckTangkiStatus = true;
+                      truckTangkiId = id;
+                      break;
+                    }
                   }
                 }
-              }
 
-              if (!truckTangkiStatus) {
-                throw new Error(`Truck ${decodedText} tidak tersedia!`);
-              }
+                if (!truckTangkiStatus) {
+                  throw new Error(`Truck ${decodedText} tidak tersedia!`);
+                }
 
-              // Perbarui data di Firebase menggunakan key unik
-              const historyRef = ref(this.database, `sms_truck_history/${this.historyKey}`);
-              await update(historyRef, {
-                sms_tangki_id: truckTangkiId,
-                updated_at: new Date().toISOString()
-              });
-
-              // Tampilkan notifikasi sukses
-              Swal.close();
-              Swal.fire({
-                title: 'Berhasil',
-                text: `Berhasil scan tangki dengan ID: ${decodedText}`,
-                icon: 'success',
-                confirmButtonText: 'OK'
-              }).then(() => {
-                this.router.navigate(['/transaksi'], {
-                  queryParams: {
-                    id: this.historyKey,
-                    nik: this.nik,
-                    nama: this.nama,
-                  }
+                // Perbarui data di Firebase menggunakan key unik
+                const historyRef = ref(this.database, `sms_truck_history/${this.historyKey}`);
+                await update(historyRef, {
+                  sms_tangki_id: truckTangkiId,
+                  updated_at: new Date().toISOString()
                 });
-              });
-            } catch (error: any) {
-              // Swal.fire({
-              //   title: 'Gagal',
-              //   text: error.message || 'Terjadi kesalahan saat memproses data.',
-              //   icon: 'error',
-              //   confirmButtonText: 'OK'
-              // });
 
-              Swal.fire({
-                title: 'Berhasil',
-                text: `Berhasil scan mobil dengan variant: ${decodedText}`,
-                icon: 'success',
-                confirmButtonText: 'OK'
-              }).then(() => {
-                this.router.navigate(['/transaksi'], {
-                  queryParams: {
-                    id: this.historyKey,
-                    nik: this.nik,
-                    nama: this.nama,
-                  }
+                // Tampilkan notifikasi sukses
+                Swal.close();
+                Swal.fire({
+                  title: 'Berhasil',
+                  text: `Berhasil scan tangki dengan ID: ${decodedText}`,
+                  icon: 'success',
+                  confirmButtonText: 'OK'
+                }).then(() => {
+                  this.router.navigate(['/transaksi'], {
+                    queryParams: {
+                      id: this.historyKey,
+                      nik: this.nik,
+                      nama: this.nama,
+                    }
+                  });
                 });
-              });
-            } finally {
-              html5QrCode.stop().catch((err) => {
-                console.error('Gagal menghentikan QR Code scanner:', err);
-              });
-              this.isScanning = false;
+              } catch (error: any) {
+                // Swal.fire({
+                //   title: 'Gagal',
+                //   text: error.message || 'Terjadi kesalahan saat memproses data.',
+                //   icon: 'error',
+                //   confirmButtonText: 'OK'
+                // });
+
+                Swal.fire({
+                  title: 'Berhasil',
+                  text: `Berhasil scan mobil dengan variant: ${decodedText}`,
+                  icon: 'success',
+                  confirmButtonText: 'OK'
+                }).then(() => {
+                  this.router.navigate(['/transaksi'], {
+                    queryParams: {
+                      id: this.historyKey,
+                      nik: this.nik,
+                      nama: this.nama,
+                    }
+                  });
+                });
+              } finally {
+                html5QrCode.stop().catch((err) => {
+                  console.error('Gagal menghentikan QR Code scanner:', err);
+                });
+                this.isScanning = false;
+              }
+            },
+            (error: any) => {
+              if (!isErrorShown) {
+                console.error('Error saat memindai QR Code:', error);
+                isErrorShown = true;
+              }
             }
-          },
-          (error: any) => {
-            if (!isErrorShown) {
-              console.error('Error saat memindai QR Code:', error);
-              isErrorShown = true;
-            }
-          }
         ).catch((err) => {
           console.error('Gagal memulai QR Code scanner:', err);
           Swal.fire({
