@@ -1,6 +1,7 @@
 <div class="container">
     <div class="row">
         <div class="col-12 mx-auto">
+            <span class="badge bg-secondary" (click)="goBack()"><i class="fas fa-arrow-left"></i> KEMBALI</span>
             <div class="row">
                 <div class="col-6">
                     <div class="form-group mt-3">
@@ -30,9 +31,8 @@
                 </div>
             </div>
             <div class="text-center mt-4">
-                <button *ngIf="!sudahJalan" class="btn btn-success" (click)="updateStartTransaction()"><i class="fas fa-truck"></i> MULAI JALAN</button>&nbsp;&nbsp;
+                <button *ngIf="!sudahJalan" class="btn btn-success" (click)="updateStartTransaction()"><i class="fas fa-truck"></i> JALAN</button>&nbsp;&nbsp;
                 <button *ngIf="sudahJalan" class="btn btn-danger" (click)="updateEndTransaction()"><i class="fas fa-truck"></i> TIBA</button>&nbsp;&nbsp;
-                <button class="btn btn-secondary" (click)="goBack()"><i class="fas fa-arrow-left"></i> KEMBALI</button>
             </div>
         </div>
     </div>

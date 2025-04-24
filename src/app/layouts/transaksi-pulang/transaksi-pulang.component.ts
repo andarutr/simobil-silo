@@ -95,7 +95,7 @@ export class TransaksiPulangComponent {
             allowOutsideClick: false
         }).then((result) => {
             if (result.isConfirmed) {
-              this.sudahJalan = false;
+              this.sudahJalan = true;
             }
         });
       } else {

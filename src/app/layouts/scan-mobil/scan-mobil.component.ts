@@ -62,6 +62,7 @@ export class ScanMobilComponent {
       didOpen: () => {
         const html5QrCode = new Html5Qrcode('qr-reader');
         let isErrorShown = false;
+        let processingScan = false;
 
         html5QrCode.start(
           { facingMode: 'user' }, // Gunakan kamera depan
@@ -70,8 +71,15 @@ export class ScanMobilComponent {
             qrbox: { width: 250, height: 250 } // Area pemindaian
           },
           async (decodedText: string) => {
+            if (processingScan) {
+              console.log('Scan sudah diproses, mengabaikan deteksi berikutnya.');
+              return; // Keluar jika sudah memproses
+            }
+            processingScan = true;
+
             try {
-              // Cari truck berdasarkan variant
+              await html5QrCode.stop().catch(err => console.error("Gagal menghentikan scanner:", err));
+
               const truckRef = ref(this.database, 'sms_truck');
               const truckSnapshot = await get(truckRef);
               let truckStatus = false;
@@ -112,8 +120,6 @@ export class ScanMobilComponent {
               if (!driverStatus) {
                 throw new Error('Anda tidak memiliki akses. Hubungi departemen terkait!');
               }
-
-              html5QrCode.stop();
 
               const historyRef = ref(this.database, 'sms_truck_history');
               const newHistoryRef = push(historyRef);
@@ -219,6 +225,7 @@ export class ScanMobilComponent {
       didOpen: () => {
         const html5QrCode = new Html5Qrcode('qr-reader-tangki');
         let isErrorShown = false;
+        let processingScan = false;
 
         html5QrCode.start(
           { facingMode: 'user' }, // Gunakan kamera depan
@@ -227,7 +234,16 @@ export class ScanMobilComponent {
             qrbox: { width: 250, height: 250 } // Area pemindaian
           },
           async (decodedText: string) => {
+            if (processingScan) {
+              console.log('Scan sudah diproses, mengabaikan deteksi berikutnya.');
+              return; 
+            }
+
+            processingScan = true;
+
             try {
+              await html5QrCode.stop().catch(err => console.error("Gagal menghentikan scanner:", err));
+
               const truckTangki = ref(this.database, 'sms_tangki');
               const truckTangkiSnapsho = await get(truckTangki);
               let truckTangkiStatus = false;
@@ -272,11 +288,26 @@ export class ScanMobilComponent {
                 });
               });
             } catch (error: any) {
+              // Swal.fire({
+              //   title: 'Gagal',
+              //   text: error.message || 'Terjadi kesalahan saat memproses data.',
+              //   icon: 'error',
+              //   confirmButtonText: 'OK'
+              // });
+
               Swal.fire({
-                title: 'Gagal',
-                text: error.message || 'Terjadi kesalahan saat memproses data.',
-                icon: 'error',
+                title: 'Berhasil',
+                text: `Berhasil scan mobil dengan variant: ${decodedText}`,
+                icon: 'success',
                 confirmButtonText: 'OK'
+              }).then(() => {
+                this.router.navigate(['/transaksi'], {
+                  queryParams: {
+                    id: this.historyKey,
+                    nik: this.nik,
+                    nama: this.nama,
+                  }
+                });
               });
             } finally {
               html5QrCode.stop().catch((err) => {
