@@ -23,7 +23,7 @@ export class TransaksiComponent {
   nama: string | null = null;
   smsTransactionKey: string | null = null;
   smsHistoryKey: string | null = null;
-  isTransactionFound: boolean = false;
+  sudahJalan: boolean = false;
 
   constructor(private router: Router, private route: ActivatedRoute, private database: Database) {
     this.route.queryParams.subscribe(params => {
@@ -65,7 +65,7 @@ export class TransaksiComponent {
 
         for (const key in transactions) {
           if (key === this.id) {
-            this.isTransactionFound = true; // Set status jika transaksi ditemukan
+            this.sudahJalan = true; // Set status jika transaksi ditemukan
             break;
           }
         }

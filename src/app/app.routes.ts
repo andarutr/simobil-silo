@@ -5,6 +5,7 @@ import { DetailComponent } from './layouts/detail/detail.component';
 import { LoginNikComponent } from './layouts/login-nik/login-nik.component';
 import { TransaksiComponent } from './layouts/transaksi/transaksi.component';
 import { TransaksiPulangComponent } from './layouts/transaksi-pulang/transaksi-pulang.component';
+import { ThanksComponent } from './layouts/thanks/thanks.component';
 import { GohomeComponent } from './layouts/gohome/gohome.component';
 
 export const routes: Routes = [
@@ -15,5 +16,6 @@ export const routes: Routes = [
     { path: 'detail', component: DetailComponent }, 
     { path: 'transaksi', component: TransaksiComponent }, 
     { path: 'transaksi-pulang', component: TransaksiPulangComponent }, 
+    { path: 'thanks', component: ThanksComponent }, 
     { path: 'gohome', component: GohomeComponent }, 
 ];
