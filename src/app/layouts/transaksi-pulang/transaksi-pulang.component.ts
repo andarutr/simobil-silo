@@ -123,7 +123,7 @@ export class TransaksiPulangComponent {
         const selectedFacingMode = useRearCamera ? 'environment' : 'user';
 
         html5QrCode.start({
-            facingMode: 'user'
+            facingMode: selectedFacingMode
           }, // Gunakan kamera depan
           {
             fps: 10, // Frame rate
@@ -230,7 +230,7 @@ export class TransaksiPulangComponent {
         const selectedFacingMode = useRearCamera ? 'environment' : 'user';
 
         html5QrCode.start({
-            facingMode: 'user'
+            facingMode: selectedFacingMode
           }, // Gunakan kamera depan
           {
             fps: 10, // Frame rate
