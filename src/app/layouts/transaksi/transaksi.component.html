@@ -30,8 +30,9 @@
                 </div>
             </div>
             <div class="text-center mt-4">
-                <button *ngIf="!isTransactionFound" class="btn btn-success" (click)="updateStartTransaction()"><i class="fas fa-truck"></i> MULAI JALAN</button>&nbsp;&nbsp;&nbsp;
-                <button *ngIf="isTransactionFound" class="btn btn-danger" (click)="updateEndTransaction()"><i class="fas fa-truck"></i> TIBA</button>&nbsp;&nbsp;&nbsp;
+                <button *ngIf="!isTransactionFound" class="btn btn-success" (click)="updateStartTransaction()"><i class="fas fa-truck"></i> MULAI JALAN</button>&nbsp;&nbsp;
+                <button *ngIf="isTransactionFound" class="btn btn-danger" (click)="updateEndTransaction()"><i class="fas fa-truck"></i> TIBA</button>&nbsp;&nbsp;
+                <button class="btn btn-secondary" (click)="goBack()"><i class="fas fa-arrow-left"></i> KEMBALI</button>
             </div>
         </div>
     </div>

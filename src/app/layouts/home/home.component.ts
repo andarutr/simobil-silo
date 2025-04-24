@@ -6,11 +6,6 @@ import localeId from '@angular/common/locales/id'; // Import Indonesian locale
 import { LOCALE_ID } from '@angular/core'; // Import LOCALE_ID from @angular/core
 import Swal from 'sweetalert2';
 
-interface User {
-  nik: string;
-  created_at: string;
-}
-
 @Component({
   selector: 'app-home',
   templateUrl: './home.component.html',
@@ -18,6 +13,7 @@ interface User {
   providers: [{ provide: LOCALE_ID, useValue: 'id-ID' }] // Provide the locale ID
 })
 export class HomeComponent implements OnInit {
+  id: string | null = null;
   nik: string | null = null;
   nama: string | null = null; 
 
@@ -27,6 +23,7 @@ export class HomeComponent implements OnInit {
 
   ngOnInit(): void {
     this.route.queryParams.subscribe(params => {
+      this.id = params['id'];
       this.nik = params['nik'];
       this.nama = params['nama'];
     });
@@ -73,6 +70,7 @@ export class HomeComponent implements OnInit {
   gotoPasToPsg(): void {
     this.router.navigate(['/transaksi'], {
       queryParams: {
+        id: this.id,
         nik: this.nik,
         nama: this.nama
       }
@@ -82,6 +80,7 @@ export class HomeComponent implements OnInit {
   gotoPsgToPas(): void {
     this.router.navigate(['/transaksi-pulang'], {
       queryParams: {
+        id: this.id,
         nik: this.nik,
         nama: this.nama
       }

@@ -8,6 +8,7 @@ import { TransaksiPulangComponent } from './layouts/transaksi-pulang/transaksi-p
 import { GohomeComponent } from './layouts/gohome/gohome.component';
 
 export const routes: Routes = [
+    { path: '', redirectTo: '/login', pathMatch: 'full' },
     { path: 'login', component: LoginNikComponent },
     { path: 'home', component: HomeComponent }, 
     { path: 'scan-mobil', component: ScanMobilComponent }, 

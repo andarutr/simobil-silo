@@ -29,9 +29,23 @@ export class TransaksiPulangComponent {
       this.nama = params['nama'];
     });
   }
-
-  goBack() {
-    this.router.navigate(['/home'], { queryParams: { nik: this.nik, nama: this.nama } });
+  goBack(){
+    if (this.id && this.nik && this.nama) {
+      this.router.navigate(['/home'], { 
+        queryParams: { 
+          id: this.id,    
+          nik: this.nik,   
+          nama: this.nama  
+        } 
+      });
+    } else {
+      Swal.fire({
+        title: 'Error',
+        text: 'Tidak dapat kembali: id, nik, atau nama tidak tersedia.',
+        icon: 'error',
+        confirmButtonText: 'OK'
+      });
+    }
   }
 
   async gotoTransaction() {
