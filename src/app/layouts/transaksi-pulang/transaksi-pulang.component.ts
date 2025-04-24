@@ -65,6 +65,17 @@ export class TransaksiPulangComponent {
     }
   }
 
+  private isMobileDevice(): boolean {
+    if (navigator.maxTouchPoints && navigator.maxTouchPoints > 0) {
+      return true;
+    }
+    if ('ontouchstart' in window) {
+        return true;
+    }
+
+    return false;
+  }
+  
   async checkTransaction() {
     const dbRef = ref(this.database, `sms_transaction/${this.id}`);
 
@@ -108,8 +119,11 @@ export class TransaksiPulangComponent {
         let isErrorShown = false;
         let processingScan = false;
 
+        const useRearCamera = this.isMobileDevice();
+        const selectedFacingMode = useRearCamera ? 'environment' : 'user';
+
         html5QrCode.start({
-            facingMode: 'user'
+            facingMode: selectedFacingMode
           }, // Gunakan kamera depan
           {
             fps: 10, // Frame rate
@@ -212,8 +226,11 @@ export class TransaksiPulangComponent {
         let isErrorShown = false;
         let processingScan = false;
 
+        const useRearCamera = this.isMobileDevice();
+        const selectedFacingMode = useRearCamera ? 'environment' : 'user';
+
         html5QrCode.start({
-            facingMode: 'user'
+            facingMode: selectedFacingMode
           }, // Gunakan kamera depan
           {
             fps: 10, // Frame rate
