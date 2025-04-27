@@ -240,7 +240,7 @@ export class TransaksiPulangComponent {
             } // Area pemindaian
           },
           async (decodedText: string) => {
-              if (decodedText == 'SILO_A' || decodedText == 'SILO_B') {
+              if (decodedText != 'SILO_A' && decodedText != 'SILO_B') {
                 await html5QrCode.stop().catch(err => console.error("Gagal menghentikan scanner (QR salah):", err));
                 Swal.fire("Gagal", "QR Code tidak sesuai. Silahkan hubungi ITE!", "error");
                 this.isScanning = false;
