@@ -55,6 +55,14 @@ export class TransaksiAdminComponent implements OnInit, OnDestroy {
     }
   }
 
+  copyLink(url: string): void {
+    navigator.clipboard.writeText(url).then(() => {
+      Swal.fire('Berhasil!', 'Link berhasil disalin ke clipboard!', 'success');
+    }).catch(err => {
+      Swal.fire('Gagal!', 'Terjadi kesalahan saat menyalin link.', 'error');
+    });
+  }
+
   loadTransactions(): void {
     this.isLoading = true;
     const dbRef = ref(this.database, 'sms_transaction');

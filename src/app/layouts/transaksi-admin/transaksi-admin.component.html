@@ -25,12 +25,10 @@
         <tr>
           <th scope="col">NIK</th>
           <th scope="col">Tgl Transaksi (Masuk)</th>
-          <!-- Kolom tambahan untuk konteks (opsional, bisa di-uncomment jika diinginkan)
           <th scope="col">Mulai PAS &rarr; PSG</th>
           <th scope="col">Tiba PAS &rarr; PSG</th>
           <th scope="col">Mulai PSG &rarr; PAS</th>
           <th scope="col">Tiba PSG &rarr; PAS</th>
-          -->
           <th scope="col" class="text-center">Action</th>
         </tr>
       </thead>
@@ -38,18 +36,29 @@
         <tr *ngFor="let trx of transactions">
           <td>{{ trx.nik || 'N/A' }}</td>
           <td>{{ trx.created_at ? formatDisplayDate(trx.created_at) : trx.id }}</td>
-          <!-- Kolom tambahan untuk konteks (opsional)
           <td>{{ trx.mulai_pas_to_psg || '-' }}</td>
           <td>{{ trx.tiba_pas_to_psg || '-' }}</td>
           <td>{{ trx.mulai_psg_to_pas || '-' }}</td>
           <td>{{ trx.tiba_psg_to_pas || '-' }}</td>
-          -->
           <td class="text-center">
+            <button *ngIf="trx.mulai_pas_to_psg == '-' && trx.tiba_pas_to_psg == '-'"
+                    class="btn btn-info btn-sm"
+                    (click)="copyLink('https://silo-pt-pas.web.app/transaksi/' + trx.id)"
+                    title="Copy Link Transaksi (Masuk)">
+              <i class="fas fa-copy"></i>
+            </button>
+
+            <button *ngIf="trx.mulai_pas_to_psg != '-' && trx.tiba_pas_to_psg != '-' && trx.mulai_psg_to_pas == '-' && trx.tiba_psg_to_pas == '-'"
+                    class="btn btn-info btn-sm"
+                    (click)="copyLink('https://silo-pt-pas.web.app/transaksi-pulang/' + trx.id)"
+                    title="Copy Link Transaksi (Pulang)">
+              <i class="fas fa-copy"></i>
+            </button>&nbsp;
             <button class="btn btn-warning btn-sm" (click)="unlockTransaction(trx)">
-              <i class="fas fa-unlock-alt"></i> Unlock
-            </button> &nbsp;
+              <i class="fas fa-unlock-alt"></i>
+            </button>&nbsp;
             <button class="btn btn-danger btn-sm" (click)="deleteTransaction(trx)">
-              <i class="fas fa-trash-alt"></i> Delete
+              <i class="fas fa-trash-alt"></i>
             </button>
           </td>
         </tr>
