@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
-import { Database, ref, onValue, update, Unsubscribe } from '@angular/fire/database';
+import { Database, ref, onValue, update, Unsubscribe, get, push, set, remove } from '@angular/fire/database';
 import Swal from 'sweetalert2';
 import moment from 'moment';
 
@@ -16,6 +16,9 @@ interface TransactionData {
   mulai_psg_to_pas?: string;
   tiba_psg_to_pas?: string;
   durasi_psg_to_pas?: string;
+  sms_driver_id?: string;
+  sms_truck_id?: string;
+  sms_tangki_id?: string;
   [key: string]: any; // Untuk properti dinamis lainnya
 }
 
@@ -87,6 +90,177 @@ export class TransaksiAdminComponent implements OnInit, OnDestroy {
     });
   }
 
+  async addNewTransaction(): Promise<void> {
+    Swal.fire({
+      title: 'Tambah Transaksi Baru',
+      inputLabel: 'NIK Driver',
+      inputPlaceholder: 'Masukkan NIK Driver',
+      html: 'Memuat data pilihan...',
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      }
+    });
+
+    try {
+      // 1. Fetch data untuk dropdowns
+      const driverRef = ref(this.database, 'sms_driver');
+      const tangkiRef = ref(this.database, 'sms_tangki');
+      const truckRef = ref(this.database, 'sms_truck');
+
+      const [driverSnapshot, tangkiSnapshot, truckSnapshot] = await Promise.all([
+        get(driverRef),
+        get(tangkiRef),
+        get(truckRef)
+      ]);
+
+      let driversOptionsHtml = '<option value="">Pilih NIK Driver...</option>';
+      const driversData: { key: string, nik: string, nama: string }[] = [];
+      if (driverSnapshot.exists()) {
+        const drivers = driverSnapshot.val();
+        Object.keys(drivers).forEach(key => {
+          driversData.push({ key, ...drivers[key] });
+          driversOptionsHtml += `<option value="${key}">${drivers[key].nik} - ${drivers[key].nama}</option>`;
+        });
+      }
+
+      let tangkiOptionsHtml = '<option value="">Pilih Tangki...</option>';
+      if (tangkiSnapshot.exists()) {
+        const tangkiData = tangkiSnapshot.val();
+        Object.keys(tangkiData).forEach(key => {
+          tangkiOptionsHtml += `<option value="${key}">${tangkiData[key].variant}</option>`;
+        });
+      }
+
+      let truckOptionsHtml = '<option value="">Pilih Truck...</option>';
+      if (truckSnapshot.exists()) {
+        const truckData = truckSnapshot.val();
+        Object.keys(truckData).forEach(key => {
+          truckOptionsHtml += `<option value="${key}">${truckData[key].variant}</option>`;
+        });
+      }
+
+      Swal.close(); // Tutup loading swal
+
+      const { value: formValues } = await Swal.fire({
+        title: 'Tambah Transaksi Baru',
+        html:
+          `<div>` +
+          `  <label for="swal-select-driver" style="display: block; text-align: left; margin-bottom: .25em;">NIK Driver:</label>` +
+          `  <select id="swal-select-driver" class="swal2-input" style="width: 100%; margin-bottom: 1em;">${driversOptionsHtml}</select>` +
+          `  <label for="swal-select-tangki" style="display: block; text-align: left; margin-bottom: .25em;">Tangki:</label>` +
+          `  <select id="swal-select-tangki" class="swal2-input" style="width: 100%; margin-bottom: 1em;">${tangkiOptionsHtml}</select>` +
+          `  <label for="swal-select-truck" style="display: block; text-align: left; margin-bottom: .25em;">Truck:</label>` +
+          `  <select id="swal-select-truck" class="swal2-input" style="width: 100%;">${truckOptionsHtml}</select>` +
+          `</div>`,
+        focusConfirm: false,
+        showCancelButton: true,
+        confirmButtonText: 'Tambahkan Transaksi',
+        cancelButtonText: 'Batal',
+        preConfirm: () => {
+          const selectedDriverKey = (Swal.getPopup()?.querySelector('#swal-select-driver') as HTMLSelectElement).value;
+          const selectedTangkiKey = (Swal.getPopup()?.querySelector('#swal-select-tangki') as HTMLSelectElement).value;
+          const selectedTruckKey = (Swal.getPopup()?.querySelector('#swal-select-truck') as HTMLSelectElement).value;
+
+          if (!selectedDriverKey) {
+            Swal.showValidationMessage('NIK Driver harus dipilih!');
+            return false;
+          }
+          if (!selectedTangkiKey) {
+            Swal.showValidationMessage('Tangki harus dipilih!');
+            return false;
+          }
+          if (!selectedTruckKey) {
+            Swal.showValidationMessage('Truck harus dipilih!');
+            return false;
+          }
+          const selectedDriver = driversData.find(d => d.key === selectedDriverKey);
+          return {
+            driverKey: selectedDriverKey,
+            driverNik: selectedDriver ? selectedDriver.nik : '',
+            tangkiKey: selectedTangkiKey,
+            truckKey: selectedTruckKey
+          };
+        }
+      });
+
+      if (formValues) {
+        const { driverKey, driverNik, tangkiKey, truckKey } = formValues;
+
+        // Konfirmasi sekali lagi (opsional, tapi baik untuk UX)
+        Swal.fire({
+          title: 'Konfirmasi Data',
+          html: `Anda akan menambahkan transaksi untuk:<br>
+                 NIK: <b>${driverNik}</b><br>
+                 Tangki ID: <b>${tangkiKey}</b><br>
+                 Truck ID: <b>${truckKey}</b><br>
+                 Lanjutkan?`,
+          icon: 'question',
+          showCancelButton: true,
+          confirmButtonText: 'Ya, Tambahkan!',
+          cancelButtonText: 'Batal'
+        }).then(async (result) => {
+          if (result.isConfirmed) {
+            const transactionListRef = ref(this.database, 'sms_transaction');
+            const newTransactionRef = push(transactionListRef);
+
+            const newTransactionData: Omit<TransactionData, 'id'> = {
+              nik: driverNik,
+              sms_driver_id: driverKey,
+              sms_tangki_id: tangkiKey,
+              sms_truck_id: truckKey,
+              created_at: new Date().toISOString(),
+              mulai_pas_to_psg: '-',
+              tiba_pas_to_psg: '-',
+              durasi_pas_to_psg: '-',
+              mulai_psg_to_pas: '-',
+              tiba_psg_to_pas: '-',
+              durasi_psg_to_pas: '-',
+            };
+            await set(newTransactionRef, newTransactionData);
+            Swal.fire('Berhasil!', 'Transaksi baru telah ditambahkan.', 'success');
+          }
+        });
+      }
+    } catch (error) {
+      console.error("Error preparing or adding new transaction:", error);
+      Swal.fire('Error', 'Gagal memuat data atau menambahkan transaksi baru.', 'error');
+    }
+  }
+
+  async deleteTransaction(transaction: TransactionData): Promise<void> {
+    Swal.fire({
+      title: 'Konfirmasi Hapus',
+      html: `Anda yakin ingin menghapus transaksi untuk NIK <b>${transaction.nik}</b> (ID: ${transaction.id})?<br>Tindakan ini tidak dapat dibatalkan.`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Ya, Hapus!',
+      cancelButtonText: 'Batal'
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          const transactionRef = ref(this.database, `sms_transaction/${transaction.id}`);
+          await remove(transactionRef);
+          Swal.fire(
+            'Terhapus!',
+            `Transaksi untuk NIK ${transaction.nik} telah dihapus.`,
+            'success'
+          );
+          // Data akan diperbarui otomatis oleh onValue listener
+        } catch (error) {
+          console.error("Error deleting transaction:", error);
+          Swal.fire(
+            'Gagal!',
+            'Terjadi kesalahan saat menghapus transaksi.',
+            'error'
+          );
+        }
+      }
+    });
+  }
+  
   async unlockTransaction(transaction: TransactionData): Promise<void> {
     // const { value: selectedField } = await Swal.fire({
     //   title: `Unlock Transaksi NIK: ${transaction.nik}`,
