@@ -1,1 +1,51 @@
-<p>transaksi-admin works!</p>
+<div class="container mt-4 mb-5">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Daftar Transaksi Admin</h2>
+    <button class="btn btn-outline-danger" (click)="logoutAdmin()">
+      <i class="fas fa-sign-out-alt"></i> Logout
+    </button>
+  </div>
+
+  <div *ngIf="isLoading" class="alert alert-info">
+    Memuat data transaksi...
+  </div>
+
+  <div *ngIf="!isLoading && transactions.length === 0" class="alert alert-warning">
+    Tidak ada data transaksi yang ditemukan.
+  </div>
+
+  <div *ngIf="!isLoading && transactions.length > 0" class="table-responsive shadow-sm">
+    <table class="table table-striped table-hover table-bordered">
+      <thead class="table-dark">
+        <tr>
+          <th scope="col">NIK</th>
+          <th scope="col">Tgl Transaksi (Masuk)</th>
+          <!-- Kolom tambahan untuk konteks (opsional, bisa di-uncomment jika diinginkan)
+          <th scope="col">Mulai PAS &rarr; PSG</th>
+          <th scope="col">Tiba PAS &rarr; PSG</th>
+          <th scope="col">Mulai PSG &rarr; PAS</th>
+          <th scope="col">Tiba PSG &rarr; PAS</th>
+          -->
+          <th scope="col" class="text-center">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let trx of transactions">
+          <td>{{ trx.nik || 'N/A' }}</td>
+          <td>{{ trx.created_at ? formatDisplayDate(trx.created_at) : trx.id }}</td>
+          <!-- Kolom tambahan untuk konteks (opsional)
+          <td>{{ trx.mulai_pas_to_psg || '-' }}</td>
+          <td>{{ trx.tiba_pas_to_psg || '-' }}</td>
+          <td>{{ trx.mulai_psg_to_pas || '-' }}</td>
+          <td>{{ trx.tiba_psg_to_pas || '-' }}</td>
+          -->
+          <td class="text-center">
+            <button class="btn btn-warning btn-sm" (click)="unlockTransaction(trx)">
+              <i class="fas fa-unlock-alt"></i> Unlock
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
