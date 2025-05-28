@@ -1,0 +1,40 @@
+<div class="container mt-5">
+  <div class="row justify-content-center">
+    <div class="col-md-6 col-lg-4">
+      <div class="card shadow-sm">
+        <div class="card-body p-4">
+          <h3 class="card-title text-center mb-4">Admin Login</h3>
+          <form (ngSubmit)="loginAdmin()">
+            <div class="mb-3">
+              <label for="adminId" class="form-label">Admin ID</label>
+              <input
+                type="text"
+                class="form-control"
+                id="adminId"
+                [(ngModel)]="adminId"
+                name="adminId"
+                placeholder="Masukkan Admin ID"
+                required
+              />
+            </div>
+            <div class="mb-3">
+              <label for="passwordAdmin" class="form-label">Password</label>
+              <input
+                type="password"
+                class="form-control"
+                id="passwordAdmin"
+                [(ngModel)]="passwordAdmin"
+                name="passwordAdmin"
+                placeholder="Masukkan Password"
+                required
+              />
+            </div>
+            <div class="d-grid">
+              <button type="submit" class="btn btn-primary">Login</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
