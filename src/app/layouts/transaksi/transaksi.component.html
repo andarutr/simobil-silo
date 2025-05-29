@@ -33,8 +33,10 @@
             </div>
             <div class="row mt-3">
                 <div class="col-6 mx-auto">
-                    <button *ngIf="!sudahJalan" class="btn btn-success" (click)="updateStartTransaction()"><i class="fas fa-truck"></i> JALAN</button>&nbsp;&nbsp;
-                    <button *ngIf="sudahJalan" class="btn btn-danger" (click)="updateEndTransaction()"><i class="fas fa-truck"></i> TIBA</button>&nbsp;&nbsp;
+                    <div class="d-flex justify-content-center mt-3">
+                        <button *ngIf="!sudahJalan" class="btn btn-success" (click)="updateStartTransaction()"><i class="fas fa-truck"></i> JALAN</button>&nbsp;&nbsp;
+                        <button *ngIf="sudahJalan" class="btn btn-danger" (click)="updateEndTransaction()"><i class="fas fa-truck"></i> TIBA</button>&nbsp;&nbsp;
+                    </div>
                 </div>
             </div>
         </div>

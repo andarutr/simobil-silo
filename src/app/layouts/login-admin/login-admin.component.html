@@ -6,14 +6,14 @@
           <h3 class="card-title text-center mb-4">Admin Login</h3>
           <form (ngSubmit)="loginAdmin()">
             <div class="mb-3">
-              <label for="adminId" class="form-label">Admin ID</label>
+              <label for="adminId" class="form-label">Username</label>
               <input
                 type="text"
                 class="form-control"
                 id="adminId"
                 [(ngModel)]="adminId"
                 name="adminId"
-                placeholder="Masukkan Admin ID"
+                placeholder="Masukkan Username"
                 required
               />
             </div>

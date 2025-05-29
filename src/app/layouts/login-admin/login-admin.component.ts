@@ -17,7 +17,7 @@ export class LoginAdminComponent {
   constructor(private router: Router) {}
 
   loginAdmin() {
-    if (this.adminId === 'hasan' && this.passwordAdmin === 'qwertyuiop') {
+    if (this.adminId === 'admin' && this.passwordAdmin === 'qwerty') {
       Swal.fire({
         icon: 'success',
         title: 'Login Berhasil',
