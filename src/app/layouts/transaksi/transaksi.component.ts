@@ -275,7 +275,7 @@ export class TransaksiComponent {
             } // Area pemindaian
           },
           async (decodedText: string) => {
-              if (decodedText != 'PT_BUNGASARI_FLOUR_MILLS') {
+              if (decodedText != 'PT_PARAMASUKA_GUPITA') {
                 await html5QrCode.stop().catch(err => console.error("Gagal menghentikan scanner (QR salah):", err));
                 Swal.fire("Gagal", "QR Code tidak sesuai. Silahkan hubungi ITE!", "error");
                 this.isScanning = false;
