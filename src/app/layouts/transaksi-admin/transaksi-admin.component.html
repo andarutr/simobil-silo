@@ -27,11 +27,11 @@
           <th scope="col">Nama Driver</th>
           <th scope="col">Truck</th>
           <th scope="col">Tangki</th>
-          <th scope="col">Tgl Transaksi (Masuk)</th>
-          <th scope="col">Mulai PAS &rarr; PSG</th>
-          <th scope="col">Tiba PAS &rarr; PSG</th>
-          <th scope="col">Mulai PSG &rarr; PAS</th>
-          <th scope="col">Tiba PSG &rarr; PAS</th>
+          <th scope="col">Tanggal</th>
+          <th scope="col">Mulai (PAS)</th>
+          <th scope="col">Tiba (PSG)</th>
+          <th scope="col">Mulai (PSG)</th>
+          <th scope="col">Tiba (PAS)</th>
           <th scope="col" class="text-center">Action</th>
         </tr>
       </thead>
@@ -46,26 +46,30 @@
           <td>{{ trx.tiba_pas_to_psg || '-' }}</td>
           <td>{{ trx.mulai_psg_to_pas || '-' }}</td>
           <td>{{ trx.tiba_psg_to_pas || '-' }}</td>
-          <td class="text-center">
-            <button *ngIf="trx.mulai_pas_to_psg == '-' && trx.tiba_pas_to_psg == '-'"
-                    class="btn btn-info btn-sm"
-                    (click)="copyLink('https://silo-pt-pas.web.app/transaksi/ ' + trx.id)"
-                    title="Copy Link Transaksi (Masuk)">
-              <i class="fas fa-copy"></i>
-            </button>
+          <td>
+            <div class="text-center">
+              <div class="d-flex justify-content-center gap-1">
+                <button *ngIf="trx.mulai_pas_to_psg == '-' && trx.tiba_pas_to_psg == '-'"
+                        class="btn btn-info btn-sm"
+                        (click)="copyLink('https://silo-pt-pas.web.app/transaksi/ ' + trx.id)"
+                        title="Copy Link Transaksi (Masuk)">
+                  <i class="fas fa-copy"></i>
+                </button>
 
-            <button *ngIf="trx.mulai_pas_to_psg != '-' && trx.tiba_pas_to_psg != '-' && trx.mulai_psg_to_pas == '-' && trx.tiba_psg_to_pas == '-'"
-                    class="btn btn-info btn-sm"
-                    (click)="copyLink('https://silo-pt-pas.web.app/transaksi-pulang/ ' + trx.id)"
-                    title="Copy Link Transaksi (Pulang)">
-              <i class="fas fa-copy"></i>
-            </button>&nbsp;
-            <button class="btn btn-warning btn-sm" (click)="unlockTransaction(trx)">
-              <i class="fas fa-unlock-alt"></i>
-            </button>&nbsp;
-            <button class="btn btn-danger btn-sm" (click)="deleteTransaction(trx)">
-              <i class="fas fa-trash-alt"></i>
-            </button>
+                <button *ngIf="trx.mulai_pas_to_psg != '-' && trx.tiba_pas_to_psg != '-' && trx.mulai_psg_to_pas == '-' && trx.tiba_psg_to_pas == '-'"
+                        class="btn btn-info btn-sm"
+                        (click)="copyLink('https://silo-pt-pas.web.app/transaksi-pulang/ ' + trx.id)"
+                        title="Copy Link Transaksi (Pulang)">
+                  <i class="fas fa-copy"></i>
+                </button>
+                <button class="btn btn-warning btn-sm" (click)="unlockTransaction(trx)">
+                  <i class="fas fa-unlock-alt"></i>
+                </button>
+                <button class="btn btn-danger btn-sm" (click)="deleteTransaction(trx)">
+                  <i class="fas fa-trash-alt"></i>
+                </button>
+              </div>
+            </div>
           </td>
         </tr>
       </tbody>
