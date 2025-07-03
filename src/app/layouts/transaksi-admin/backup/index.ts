@@ -7,24 +7,19 @@ import moment from 'moment';
 
 // Interface untuk mendefinisikan struktur data transaksi
 interface TransactionData {
-  id: string;
+  id: string; // Kunci dari Firebase
   nik: string;
-  created_at?: string;
+  created_at?: string; // Diasumsikan ada field ini untuk tanggal transaksi
   mulai_pas_to_psg?: string;
   tiba_pas_to_psg?: string;
   durasi_pas_to_psg?: string;
   mulai_psg_to_pas?: string;
   tiba_psg_to_pas?: string;
   durasi_psg_to_pas?: string;
-
-  sms_truck_history_id?: string;
   sms_driver_id?: string;
   sms_truck_id?: string;
   sms_tangki_id?: string;
-
-  namaDriver?: string;
-  nomorPolisi?: string;
-  variantTangki?: string;
+  [key: string]: any; // Untuk properti dinamis lainnya
 }
 
 @Component({
@@ -36,10 +31,6 @@ interface TransactionData {
 })
 export class TransaksiAdminComponent implements OnInit, OnDestroy {
   transactions: TransactionData[] = [];
-  driversMap: { [key: string]: any } = {};
-  trucksMap: { [key: string]: any } = {};
-  tangkisMap: { [key: string]: any } = {};
-
   private dbSubscription: Unsubscribe | undefined;
   isLoading: boolean = true;
 
@@ -54,9 +45,7 @@ export class TransaksiAdminComponent implements OnInit, OnDestroy {
   constructor(private database: Database, private router: Router) {}
 
   ngOnInit(): void {
-    this.loadReferenceData().then(() => {
-      this.loadTransactions(); // baru muat transaksi setelah referensi siap
-    });
+    this.loadTransactions();
   }
 
   ngOnDestroy(): void {
@@ -74,155 +63,37 @@ export class TransaksiAdminComponent implements OnInit, OnDestroy {
     });
   }
 
-  async loadReferenceData(): Promise<void> {
-    try {
-      const driverSnapshot = await get(ref(this.database, 'sms_driver'));
-      if (driverSnapshot.exists()) {
-        this.driversMap = driverSnapshot.val();
-      }
-
-      const truckSnapshot = await get(ref(this.database, 'sms_truck'));
-      if (truckSnapshot.exists()) {
-        this.trucksMap = truckSnapshot.val();
-      }
-
-      const tangkiSnapshot = await get(ref(this.database, 'sms_tangki'));
-      if (tangkiSnapshot.exists()) {
-        this.tangkisMap = tangkiSnapshot.val();
-      }
-    } catch (error) {
-      console.error('Gagal memuat data referensi:', error);
-    }
-  }
-
-  // loadTransactions(): void {
-  //   const transactionRef = ref(this.database, 'sms_transaction');
-    
-  //   onValue(transactionRef, (snapshot) => {
-  //     if (snapshot.exists()) {
-  //       const data = snapshot.val();
-
-  //       this.transactions = Object.keys(data).map(key => {
-  //         const transaction = {
-  //           id: key,
-  //           ...data[key]
-  //         };
-
-  //         if (transaction.sms_driver_id && this.driversMap?.[transaction.sms_driver_id]) {
-  //           transaction.namaDriver = this.driversMap[transaction.sms_driver_id].nama || 'N/A';
-  //         } else {
-  //           transaction.namaDriver = 'N/A';
-  //         }
-
-  //         if (transaction.sms_truck_id && this.trucksMap?.[transaction.sms_truck_id]) {
-  //           transaction.nomorPolisi = this.trucksMap[transaction.sms_truck_id].variant || 'N/A';
-  //         } else {
-  //           transaction.nomorPolisi = 'N/A';
-  //         }
-
-  //         if (transaction.sms_tangki_id && this.tangkisMap?.[transaction.sms_tangki_id]) {
-  //           transaction.variantTangki = this.tangkisMap[transaction.sms_tangki_id].variant || 'N/A';
-  //         } else {
-  //           transaction.variantTangki = 'N/A';
-  //         }
-
-  //         return transaction;
-  //       }).sort((a, b) => {
-  //         const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
-  //         const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
-  //         return dateB - dateA;
-  //       });
-
-  //     } else {
-  //       this.transactions = [];
-  //     }
-      
-  //     this.isLoading = false;
-  //   }, (error) => {
-  //     console.error("Error fetching transactions:", error);
-  //     this.isLoading = false;
-  //   });
-  // }
-
   loadTransactions(): void {
-    const transactionRef = ref(this.database, 'sms_transaction');
-    
-    onValue(transactionRef, async (snapshot) => {
-      if (snapshot.exists()) {
-        const data = snapshot.val();
-        
-        const promises = Object.keys(data).map(async (key) => {
-          const transaction = {
-            id: key,
-            ...data[key]
-          } as TransactionData;
+    this.isLoading = true;
+    const dbRef = ref(this.database, 'sms_transaction');
+    this.dbSubscription = onValue(dbRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        this.transactions = Object.keys(data).map(key => ({
+          id: key,
+          ...data[key]
+        })).sort((a, b) => {
+          // Urutkan berdasarkan created_at (terbaru dulu), fallback ke ID jika tanggal tidak ada
+          const aDate = a.created_at ? moment(a.created_at) : null;
+          const bDate = b.created_at ? moment(b.created_at) : null;
 
-          // Jika ada sms_truck_history_id, ambil data tambahan
-          if (transaction.sms_truck_history_id) {
-            const historySnapshot = await get(ref(this.database, `sms_truck_history/${transaction.sms_truck_history_id}`));
-            
-            if (historySnapshot.exists()) {
-              const historyData = historySnapshot.val();
-
-              // Ambil ID dari history
-              // transaction.sms_driver_id = historyData.sms_driver_id || null;
-              // transaction.sms_truck_id = historyData.sms_truck_id || null;
-              // transaction.sms_tangki_id = historyData.sms_tangki_id || null;
-
-              // // Ambil nama driver, no polisi, dan variant tangki
-              // transaction.namaDriver = this.driversMap?.[transaction.sms_driver_id]?.nama || 'N/A';
-              // transaction.nomorPolisi = this.trucksMap?.[transaction.sms_truck_id]?.variant || 'N/A';
-              // transaction.variantTangki = this.tangkisMap?.[transaction.sms_tangki_id]?.variant || 'N/A';
-              const driverId = historyData.sms_driver_id;
-              const truckId = historyData.sms_truck_id;
-              const tangkiId = historyData.sms_tangki_id;
-
-              // Nama Driver
-              if (driverId && this.driversMap?.[driverId]) {
-                transaction.namaDriver = this.driversMap[driverId].nama || 'N/A';
-              } else {
-                transaction.namaDriver = 'N/A';
-              }
-
-              // Nomor Polisi Truck
-              if (truckId && this.trucksMap?.[truckId]) {
-                transaction.nomorPolisi = this.trucksMap[truckId].variant || 'N/A';
-              } else {
-                transaction.nomorPolisi = 'N/A';
-              }
-
-              // Variant Tangki
-              if (tangkiId && this.tangkisMap?.[tangkiId]) {
-                transaction.variantTangki = this.tangkisMap[tangkiId].variant || 'N/A';
-              } else {
-                transaction.variantTangki = 'N/A';
-              }
-
-            } else {
-              // Jika history tidak ditemukan
-              transaction.namaDriver = 'N/A';
-              transaction.nomorPolisi = 'N/A';
-              transaction.variantTangki = 'N/A';
-            }
-          } else {
-            // Jika tidak ada sms_truck_history_id
-            transaction.namaDriver = 'N/A';
-            transaction.nomorPolisi = 'N/A';
-            transaction.variantTangki = 'N/A';
+          if (aDate && bDate) {
+            return bDate.valueOf() - aDate.valueOf();
+          } else if (aDate) {
+            return -1; // a punya tanggal, b tidak, a duluan
+          } else if (bDate) {
+            return 1;  // b punya tanggal, a tidak, b duluan
           }
-
-          return transaction;
+          // Jika keduanya tidak punya created_at, urutkan berdasarkan ID
+          return b.id.localeCompare(a.id);
         });
-
-        this.transactions = await Promise.all(promises);
-        this.isLoading = false;
-
       } else {
         this.transactions = [];
-        this.isLoading = false;
       }
+      this.isLoading = false;
     }, (error) => {
       console.error("Error fetching transactions:", error);
+      Swal.fire('Error', 'Gagal memuat data transaksi dari Firebase.', 'error');
       this.isLoading = false;
     });
   }
