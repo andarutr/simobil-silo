@@ -49,16 +49,17 @@
           <td>
             <div class="text-center">
               <div class="d-flex justify-content-center gap-1">
-                <button *ngIf="trx.mulai_pas_to_psg == '-' && trx.tiba_pas_to_psg == '-'"
+                <button *ngIf="trx.mulai_pas_to_psg == '-' || trx.tiba_pas_to_psg == '-'"
                         class="btn btn-info btn-sm"
-                        (click)="copyLink('https://silo-pt-pas.web.app/transaksi/ ' + trx.id)"
+                        (click)="copyLink(trx.id)"
                         title="Copy Link Transaksi (Masuk)">
                   <i class="fas fa-copy"></i>
                 </button>
 
-                <button *ngIf="trx.mulai_pas_to_psg != '-' && trx.tiba_pas_to_psg != '-' && trx.mulai_psg_to_pas == '-' && trx.tiba_psg_to_pas == '-'"
+                <!-- Tombol Copy Link Pulang -->
+                <button *ngIf="trx.mulai_psg_to_pas != '-' || trx.tiba_psg_to_pas != '-'"
                         class="btn btn-info btn-sm"
-                        (click)="copyLink('https://silo-pt-pas.web.app/transaksi-pulang/ ' + trx.id)"
+                        (click)="copyLinkPulang(trx.id)"
                         title="Copy Link Transaksi (Pulang)">
                   <i class="fas fa-copy"></i>
                 </button>

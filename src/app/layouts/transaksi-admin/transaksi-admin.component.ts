@@ -66,11 +66,39 @@ export class TransaksiAdminComponent implements OnInit, OnDestroy {
     }
   }
 
-  copyLink(url: string): void {
-    navigator.clipboard.writeText(url).then(() => {
-      Swal.fire('Berhasil!', 'Link berhasil disalin ke clipboard!', 'success');
+  copyLink(transactionId: string): void {
+    const transaction = this.transactions.find(t => t.id === transactionId);
+    if (!transaction) return;
+
+    const nik = transaction.nik || '';
+    const namaDriver = encodeURIComponent(transaction.namaDriver || '');
+    const baseUrl = ' https://silo-pt-pas.web.app/transaksi';
+
+    const link = `${baseUrl}?id=${transactionId}&nik=${nik}&nama=${namaDriver}`;
+    
+    navigator.clipboard.writeText(link).then(() => {
+      Swal.fire('Berhasil!', 'Link telah disalin ke clipboard.', 'success');
     }).catch(err => {
-      Swal.fire('Gagal!', 'Terjadi kesalahan saat menyalin link.', 'error');
+      Swal.fire('Gagal!', 'Tidak bisa menyalin link.', 'error');
+      console.error("Gagal menyalin link:", err);
+    });
+  }
+
+  copyLinkPulang(transactionId: string): void {
+    const transaction = this.transactions.find(t => t.id === transactionId);
+    if (!transaction) return;
+
+    const nik = transaction.nik || '';
+    const namaDriver = encodeURIComponent(transaction.namaDriver || '');
+    const baseUrl = 'https://silo-pt-pas.web.app/transaksi-pulang';
+
+    const link = `${baseUrl}?id=${transactionId}&nik=${nik}&nama=${namaDriver}`;
+
+    navigator.clipboard.writeText(link).then(() => {
+      Swal.fire('Berhasil!', 'Link pulang telah disalin ke clipboard.', 'success');
+    }).catch(err => {
+      Swal.fire('Gagal!', 'Tidak bisa menyalin link.', 'error');
+      console.error("Gagal menyalin link:", err);
     });
   }
 
