@@ -447,58 +447,6 @@ export class TransaksiAdminComponent implements OnInit, OnDestroy {
       }
     });
 
-    // if (selectedField) {
-    //   const selectedText = this.unlockOptions[selectedField as string] || 'Proses terpilih';
-    //   Swal.fire({
-    //     title: 'Konfirmasi Unlock',
-    //     html: `Anda yakin ingin meng-unlock proses "<b>${selectedText}</b>" untuk NIK <b>${transaction.nik}</b>?<br>Tindakan ini akan mereset waktu proses terkait.`,
-    //     icon: 'warning',
-    //     showCancelButton: true,
-    //     confirmButtonColor: '#3085d6',
-    //     cancelButtonColor: '#d33',
-    //     confirmButtonText: 'Ya, Unlock!',
-    //     cancelButtonText: 'Batal'
-    //   }).then(async (result) => {
-    //     if (result.isConfirmed) {
-    //       try {
-    //         const transactionRef = ref(this.database, `sms_transaction/${transaction.id}`);
-    //         const updates: { [key: string]: any } = {};
-
-    //         // Logika untuk mereset field terkait
-    //         if (selectedField === 'mulai_pas_to_psg') {
-    //             updates['mulai_pas_to_psg'] = '-';
-    //             updates['tiba_pas_to_psg'] = '-';
-    //             updates['durasi_pas_to_psg'] = '-';
-    //         } else if (selectedField === 'tiba_pas_to_psg') {
-    //             updates['tiba_pas_to_psg'] = '-';
-    //             updates['durasi_pas_to_psg'] = '-'; // Hanya jika 'mulai' sudah ada
-    //         } else if (selectedField === 'mulai_psg_to_pas') {
-    //             updates['mulai_psg_to_pas'] = '-';
-    //             updates['tiba_psg_to_pas'] = '-';
-    //             updates['durasi_psg_to_pas'] = '-';
-    //         } else if (selectedField === 'tiba_psg_to_pas') {
-    //             updates['tiba_psg_to_pas'] = '-';
-    //             updates['durasi_psg_to_pas'] = '-'; // Hanya jika 'mulai' sudah ada
-    //         }
-
-    //         if (Object.keys(updates).length > 0) {
-    //           await update(transactionRef, updates);
-    //           Swal.fire(
-    //             'Berhasil!',
-    //             `Proses "${selectedText}" telah di-unlock.`,
-    //             'success'
-    //           );
-    //         } else {
-    //            Swal.fire('Info', 'Tidak ada field yang diubah.', 'info');
-    //         }
-    //         // Data akan diperbarui otomatis oleh onValue listener
-    //       } catch (error) {
-    //         console.error("Error unlocking transaction:", error);
-    //         Swal.fire('Error', 'Gagal meng-unlock transaksi.', 'error');
-    //       }
-    //     }
-    //   });
-    // }
 
     if (formValues) {
       const { selectedField, time } = formValues; // selectedField adalah 'mulai_pas_to_psg', 'tiba_pas_to_psg', dll.
@@ -527,11 +475,22 @@ export class TransaksiAdminComponent implements OnInit, OnDestroy {
 
             // 1. Logika untuk "Mulai PAS to PSG"
             if (selectedField === 'mulai_pas_to_psg') {
-                updates['mulai_pas_to_psg'] = newTimestamp; // Kirim data jam ke kolom 'mulai_pas_to_psg'
-                updates['tiba_pas_to_psg'] = '-';           // Reset waktu tiba
-                updates['durasi_pas_to_psg'] = '-';         // Reset durasi
+                updates['mulai_pas_to_psg'] = newTimestamp; 
+                const tibaTimestamp = transaction.tiba_pas_to_psg; 
+                const momentMulai = moment(newTimestamp, 'HH:mm', true); 
+                const momentTiba = moment(tibaTimestamp, 'HH:mm', true);
+
+                  if (tibaTimestamp && tibaTimestamp !== '-') {
+                    const durMoment = moment.duration(momentTiba.diff(momentMulai)); 
+                    const totalHours = Math.floor(durMoment.asHours());
+                    const seconds = durMoment.seconds();
+                    const displayHoursFormatted = String(totalHours).padStart(2, '0');
+                    const displaySecondsFormatted = String(seconds).padStart(2, '0');
+                    updates['durasi_pas_to_psg'] = `${displayHoursFormatted}:${displaySecondsFormatted}`;
+                } else {
+                    updates['durasi_pas_to_psg'] = '-'; // Jika waktu mulai tidak valid, reset durasi
+                }
             }
-            // 2. Logika untuk "Tiba PAS to PSG"
             else if (selectedField === 'tiba_pas_to_psg') {
                 updates['tiba_pas_to_psg'] = newTimestamp; // Kirim data jam ke kolom 'tiba_pas_to_psg'
                 const mulaiTimestamp = transaction.mulai_pas_to_psg; // Ambil waktu mulai yang sudah ada
@@ -558,8 +517,21 @@ export class TransaksiAdminComponent implements OnInit, OnDestroy {
             // Logika serupa untuk "Mulai PSG to PAS"
             else if (selectedField === 'mulai_psg_to_pas') {
                 updates['mulai_psg_to_pas'] = newTimestamp;
-                updates['tiba_psg_to_pas'] = '-';
-                updates['durasi_psg_to_pas'] = '-';
+                
+                const tibaTimestamp = transaction.tiba_psg_to_pas; 
+                const momentMulai = moment(newTimestamp, 'HH:mm', true); 
+                const momentTiba = moment(tibaTimestamp, 'HH:mm', true);
+
+                  if (tibaTimestamp && tibaTimestamp !== '-') {
+                    const durMoment = moment.duration(momentTiba.diff(momentMulai)); 
+                    const totalHours = Math.floor(durMoment.asHours());
+                    const seconds = durMoment.seconds();
+                    const displayHoursFormatted = String(totalHours).padStart(2, '0');
+                    const displaySecondsFormatted = String(seconds).padStart(2, '0');
+                    updates['durasi_psg_to_pas'] = `${displayHoursFormatted}:${displaySecondsFormatted}`;
+                } else {
+                    updates['durasi_psg_to_pas'] = '-'; // Jika waktu mulai tidak valid, reset durasi
+                }
             }
             // Logika serupa untuk "Tiba PSG to PAS"
             else if (selectedField === 'tiba_psg_to_pas') {

@@ -19,20 +19,20 @@
     Tidak ada data transaksi yang ditemukan.
   </div>
 
-  <div *ngIf="!isLoading && transactions.length > 0" class="table-responsive shadow-sm">
+  <div *ngIf="!isLoading && transactions.length > 0" class="table-responsive shadow-sm" style="max-height: 400px; overflow-y: auto;">
     <table class="table table-striped table-hover table-bordered">
       <thead class="table-dark">
-        <tr>
-          <th scope="col">NIK</th>
-          <th scope="col">Nama Driver</th>
-          <th scope="col">Truck</th>
-          <th scope="col">Tangki</th>
-          <th scope="col">Tanggal</th>
-          <th scope="col">Mulai (PAS)</th>
-          <th scope="col">Tiba (PSG)</th>
-          <th scope="col">Mulai (PSG)</th>
-          <th scope="col">Tiba (PAS)</th>
-          <th scope="col" class="text-center">Action</th>
+        <tr class="align-middle">
+          <th scope="col" style="position: sticky; top: 0; background: #212529; z-index: 10;">NIK</th>
+          <th scope="col" style="position: sticky; top: 0; background: #212529; z-index: 10;">Nama Driver</th>
+          <th scope="col" style="position: sticky; top: 0; background: #212529; z-index: 10;">Truck</th>
+          <th scope="col" style="position: sticky; top: 0; background: #212529; z-index: 10;">Tangki</th>
+          <th scope="col" style="position: sticky; top: 0; background: #212529; z-index: 10;">Tanggal</th>
+          <th scope="col" style="position: sticky; top: 0; background: #212529; z-index: 10;">Mulai (PAS)</th>
+          <th scope="col" style="position: sticky; top: 0; background: #212529; z-index: 10;">Tiba (PSG)</th>
+          <th scope="col" style="position: sticky; top: 0; background: #212529; z-index: 10;">Mulai (PSG)</th>
+          <th scope="col" style="position: sticky; top: 0; background: #212529; z-index: 10;">Tiba (PAS)</th>
+          <th scope="col" class="text-center" style="position: sticky; top: 0; background: #212529; z-index: 10;">Action</th>
         </tr>
       </thead>
       <tbody>
