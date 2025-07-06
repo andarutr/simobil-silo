@@ -17,6 +17,13 @@ interface TransactionData {
   tiba_psg_to_pas?: string;
   durasi_psg_to_pas?: string;
 
+  mulai_bongkar?: string;
+  selesai_bongkar?: string;
+  durasi_bongkar?: string;
+  mulai_cleaning?: string;
+  selesai_cleaning?: string;
+  durasi_cleaning?: string;
+  
   sms_truck_history_id?: string;
   sms_driver_id?: string;
   sms_truck_id?: string;
@@ -357,6 +364,12 @@ export class TransaksiAdminComponent implements OnInit, OnDestroy {
               mulai_psg_to_pas: '-',
               tiba_psg_to_pas: '-',
               durasi_psg_to_pas: '-',
+              mulai_bongkar: '-',
+              selesai_bongkar: '-',
+              durasi_bongkar: '-',
+              mulai_cleaning: '-',
+              selesai_cleaning: '-',
+              durasi_cleaning: '-',
             };
 
             await set(newTransactionRef, newTransactionData);
