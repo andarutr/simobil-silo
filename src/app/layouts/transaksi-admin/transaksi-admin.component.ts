@@ -17,6 +17,13 @@ interface TransactionData {
   tiba_psg_to_pas?: string;
   durasi_psg_to_pas?: string;
 
+  mulai_bongkar?: string;
+  selesai_bongkar?: string;
+  durasi_bongkar?: string;
+  mulai_cleaning?: string;
+  selesai_cleaning?: string;
+  durasi_cleaning?: string;
+  
   sms_truck_history_id?: string;
   sms_driver_id?: string;
   sms_truck_id?: string;
@@ -122,56 +129,6 @@ export class TransaksiAdminComponent implements OnInit, OnDestroy {
       console.error('Gagal memuat data referensi:', error);
     }
   }
-
-  // loadTransactions(): void {
-  //   const transactionRef = ref(this.database, 'sms_transaction');
-    
-  //   onValue(transactionRef, (snapshot) => {
-  //     if (snapshot.exists()) {
-  //       const data = snapshot.val();
-
-  //       this.transactions = Object.keys(data).map(key => {
-  //         const transaction = {
-  //           id: key,
-  //           ...data[key]
-  //         };
-
-  //         if (transaction.sms_driver_id && this.driversMap?.[transaction.sms_driver_id]) {
-  //           transaction.namaDriver = this.driversMap[transaction.sms_driver_id].nama || 'N/A';
-  //         } else {
-  //           transaction.namaDriver = 'N/A';
-  //         }
-
-  //         if (transaction.sms_truck_id && this.trucksMap?.[transaction.sms_truck_id]) {
-  //           transaction.nomorPolisi = this.trucksMap[transaction.sms_truck_id].variant || 'N/A';
-  //         } else {
-  //           transaction.nomorPolisi = 'N/A';
-  //         }
-
-  //         if (transaction.sms_tangki_id && this.tangkisMap?.[transaction.sms_tangki_id]) {
-  //           transaction.variantTangki = this.tangkisMap[transaction.sms_tangki_id].variant || 'N/A';
-  //         } else {
-  //           transaction.variantTangki = 'N/A';
-  //         }
-
-  //         return transaction;
-  //       }).sort((a, b) => {
-  //         const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
-  //         const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
-  //         return dateB - dateA;
-  //       });
-
-  //     } else {
-  //       this.transactions = [];
-  //     }
-      
-  //     this.isLoading = false;
-  //   }, (error) => {
-  //     console.error("Error fetching transactions:", error);
-  //     this.isLoading = false;
-  //   });
-  // }
-
   loadTransactions(): void {
     const transactionRef = ref(this.database, 'sms_transaction');
     
@@ -369,11 +326,37 @@ export class TransaksiAdminComponent implements OnInit, OnDestroy {
             const transactionListRef = ref(this.database, 'sms_transaction');
             const newTransactionRef = push(transactionListRef);
 
+            // const newTransactionData: Omit<TransactionData, 'id'> = {
+            //   nik: driverNik,
+            //   sms_driver_id: driverKey,
+            //   sms_tangki_id: tangkiKey,
+            //   sms_truck_id: truckKey,
+            //   created_at: new Date().toISOString(),
+            //   mulai_pas_to_psg: '-',
+            //   tiba_pas_to_psg: '-',
+            //   durasi_pas_to_psg: '-',
+            //   mulai_psg_to_pas: '-',
+            //   tiba_psg_to_pas: '-',
+            //   durasi_psg_to_pas: '-',
+            // };
+
+            // 1. Buat entry baru di sms_truck_history
+            const truckHistoryRef = push(ref(this.database, 'sms_truck_history'));
+            const truckHistoryData = {
+              sms_driver_id: driverKey,
+              sms_tangki_id: tangkiKey,
+              sms_truck_id: truckKey,
+              created_at: new Date().toISOString()
+            };
+            await set(truckHistoryRef, truckHistoryData);
+
+            // 2. Buat transaksi baru dengan history_id
             const newTransactionData: Omit<TransactionData, 'id'> = {
               nik: driverNik,
               sms_driver_id: driverKey,
               sms_tangki_id: tangkiKey,
               sms_truck_id: truckKey,
+              sms_truck_history_id: truckHistoryRef.key!, // ⬅️ ini penting
               created_at: new Date().toISOString(),
               mulai_pas_to_psg: '-',
               tiba_pas_to_psg: '-',
@@ -381,7 +364,14 @@ export class TransaksiAdminComponent implements OnInit, OnDestroy {
               mulai_psg_to_pas: '-',
               tiba_psg_to_pas: '-',
               durasi_psg_to_pas: '-',
+              mulai_bongkar: '-',
+              selesai_bongkar: '-',
+              durasi_bongkar: '-',
+              mulai_cleaning: '-',
+              selesai_cleaning: '-',
+              durasi_cleaning: '-',
             };
+
             await set(newTransactionRef, newTransactionData);
             Swal.fire('Berhasil!', 'Transaksi baru telah ditambahkan.', 'success');
           }
