@@ -38,6 +38,18 @@ export class TransaksiComponent {
   sudahJalan: boolean = false;
   isScanning: boolean = false;
 
+  mulai_bongkar?: string; 
+  mulai_bongkar_by?: string;
+  selesai_bongkar?: string;
+  selesai_bongkar_by?: string;
+  durasi_bongkar?: string;
+
+  mulai_cleaning?: string;
+  mulai_cleaning_by?: string;
+  selesai_cleaning?: string;
+  selesai_cleaning_by?: string;
+  durasi_cleaning?: string;
+
   constructor(private router: Router, private route: ActivatedRoute, private database: Database) {
     this.route.queryParams.subscribe(params => {
       this.id = params['id'];
@@ -166,16 +178,16 @@ export class TransaksiComponent {
                   mulai_psg_to_pas: '-', // Default value
                   durasi_psg_to_pas: '-', // Default value
                   tiba_psg_to_pas: '-', // Default value
-                  mulai_bongkar: '-', // Default value
-                  mulai_bongkar_by: '-', // Default value
-                  selesai_bongkar: '-', // Default value
-                  selesai_bongkar_by: '-', // Default value
-                  durasi_bongkar: '-', // Default value
-                  mulai_cleaning: '-', // Default value
-                  mulai_cleaning_by: '-', // Default value
-                  selesai_cleaning: '-', // Default value
-                  selesai_cleaning_by: '-', // Default value
-                  durasi_cleaning: '-', // Default value
+                  mulai_bongkar: this.mulai_bongkar ?? '-', 
+                  mulai_bongkar_by: this.mulai_bongkar_by ?? '-', 
+                  selesai_bongkar: this.selesai_bongkar ?? '-', 
+                  selesai_bongkar_by: this.selesai_bongkar_by ?? '-', 
+                  durasi_bongkar: this.durasi_bongkar ?? '-', 
+                  mulai_cleaning: this.mulai_cleaning ?? '-', 
+                  mulai_cleaning_by: this.mulai_cleaning_by ?? '-', 
+                  selesai_cleaning: this.selesai_cleaning ?? '-', 
+                  selesai_cleaning_by: this.selesai_cleaning_by ?? '-', 
+                  durasi_cleaning: this.durasi_cleaning ?? '-',
                   created_at: new Date().toISOString(), // Waktu pembuatan data
                   updated_at: new Date().toISOString() // Waktu pembaruan data
                 };
