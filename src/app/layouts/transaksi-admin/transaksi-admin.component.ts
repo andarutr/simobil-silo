@@ -603,7 +603,7 @@ export class TransaksiAdminComponent implements OnInit, OnDestroy {
     if (!date.isValid()) {
       date = moment(dateInput); // Fallback jika bukan format HH:mm (misal ISO string dari data lama)
     }
-    return date.isValid() ? date.format('DD MMM YYYY, HH:mm') : 'Tanggal Tidak Valid';
+    return date.isValid() ? date.format('DD MMM YYYY') : 'Tanggal Tidak Valid';
   }
 
   logoutAdmin(): void {

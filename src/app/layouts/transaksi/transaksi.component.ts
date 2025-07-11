@@ -166,6 +166,31 @@ export class TransaksiComponent {
               try {
                 const dbRef = ref(this.database, 'sms_transaction');
 
+                const options: Intl.DateTimeFormatOptions = {
+                  year: 'numeric',
+                  month: '2-digit',
+                  day: '2-digit',
+                  hour: '2-digit',
+                  minute: '2-digit',
+                  second: '2-digit',
+                  fractionalSecondDigits: 3,
+                  timeZone: 'Asia/Jakarta',
+                  timeZoneName: 'shortOffset'
+                };
+
+                const formatter = new Intl.DateTimeFormat('en-US', options);
+                const parts = formatter.formatToParts(new Date());
+
+                // Buat ISO-like string dengan timezone offset
+                function getJakartaISOString(date: Date): string {
+                  const tzOffsetMs = date.getTimezoneOffset() * 60 * 1000;
+                  const localTime = date.getTime() - tzOffsetMs;
+                  const utcTime = new Date(localTime);
+                  return utcTime.toISOString().replace('+07:00','Z'); // Ganti 'Z' dengan +07:00
+                }
+
+                const nowJakartaStr = getJakartaISOString(new Date());
+
                 // Data yang akan disimpan
                 const transactionData = {
                   nik: this.nik || '-', // NIK pengguna (jika ada)
@@ -188,11 +213,10 @@ export class TransaksiComponent {
                   selesai_cleaning: this.selesai_cleaning ?? '-', 
                   selesai_cleaning_by: this.selesai_cleaning_by ?? '-', 
                   durasi_cleaning: this.durasi_cleaning ?? '-',
-                  created_at: new Date().toISOString(), // Waktu pembuatan data
-                  updated_at: new Date().toISOString() // Waktu pembaruan data
+                  created_at: getJakartaISOString(new Date()),
+                  updated_at: getJakartaISOString(new Date()),
                 };
 
-                // Push data ke Firebase
                 const newTransactionRef = push(dbRef); // Membuat key unik untuk data baru
                 this.smsTransactionKey = newTransactionRef.key;
                 await set(newTransactionRef, transactionData);
