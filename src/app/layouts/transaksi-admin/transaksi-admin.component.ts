@@ -58,6 +58,12 @@ export class TransaksiAdminComponent implements OnInit, OnDestroy {
     'tiba_psg_to_pas': 'Tiba PSG to PAS'
   };
 
+  private isToday(timestamp: string): boolean {
+    const today = moment().startOf('day'); // 00:00 hari ini
+    const date = moment(timestamp);
+    return date.isSame(today, 'day'); // cek apakah tanggal sama
+  }
+
   constructor(private database: Database, private router: Router) {}
 
   ngOnInit(): void {
@@ -132,65 +138,119 @@ export class TransaksiAdminComponent implements OnInit, OnDestroy {
   loadTransactions(): void {
     const transactionRef = ref(this.database, 'sms_transaction');
     
+    // onValue(transactionRef, async (snapshot) => {
+    //   if (snapshot.exists()) {
+    //     const data = snapshot.val();
+        
+    //     const promises = Object.keys(data).map(async (key) => {
+    //       const transaction = {
+    //         id: key,
+    //         ...data[key]
+    //       } as TransactionData;
+
+    //       // Jika ada sms_truck_history_id, ambil data tambahan
+    //       if (transaction.sms_truck_history_id) {
+    //         const historySnapshot = await get(ref(this.database, `sms_truck_history/${transaction.sms_truck_history_id}`));
+            
+    //         if (historySnapshot.exists()) {
+    //           const historyData = historySnapshot.val();
+
+    //           // Ambil ID dari history
+    //           // transaction.sms_driver_id = historyData.sms_driver_id || null;
+    //           // transaction.sms_truck_id = historyData.sms_truck_id || null;
+    //           // transaction.sms_tangki_id = historyData.sms_tangki_id || null;
+
+    //           // // Ambil nama driver, no polisi, dan variant tangki
+    //           // transaction.namaDriver = this.driversMap?.[transaction.sms_driver_id]?.nama || 'N/A';
+    //           // transaction.nomorPolisi = this.trucksMap?.[transaction.sms_truck_id]?.variant || 'N/A';
+    //           // transaction.variantTangki = this.tangkisMap?.[transaction.sms_tangki_id]?.variant || 'N/A';
+    //           const driverId = historyData.sms_driver_id;
+    //           const truckId = historyData.sms_truck_id;
+    //           const tangkiId = historyData.sms_tangki_id;
+
+    //           // Nama Driver
+    //           if (driverId && this.driversMap?.[driverId]) {
+    //             transaction.namaDriver = this.driversMap[driverId].nama || 'N/A';
+    //           } else {
+    //             transaction.namaDriver = 'N/A';
+    //           }
+
+    //           // Nomor Polisi Truck
+    //           if (truckId && this.trucksMap?.[truckId]) {
+    //             transaction.nomorPolisi = this.trucksMap[truckId].variant || 'N/A';
+    //           } else {
+    //             transaction.nomorPolisi = 'N/A';
+    //           }
+
+    //           // Variant Tangki
+    //           if (tangkiId && this.tangkisMap?.[tangkiId]) {
+    //             transaction.variantTangki = this.tangkisMap[tangkiId].variant || 'N/A';
+    //           } else {
+    //             transaction.variantTangki = 'N/A';
+    //           }
+
+    //         } else {
+    //           // Jika history tidak ditemukan
+    //           transaction.namaDriver = 'N/A';
+    //           transaction.nomorPolisi = 'N/A';
+    //           transaction.variantTangki = 'N/A';
+    //         }
+    //       } else {
+    //         // Jika tidak ada sms_truck_history_id
+    //         transaction.namaDriver = 'N/A';
+    //         transaction.nomorPolisi = 'N/A';
+    //         transaction.variantTangki = 'N/A';
+    //       }
+
+    //       return transaction;
+    //     });
+
+    //     this.transactions = await Promise.all(promises);
+    //     this.isLoading = false;
+
+    //   } else {
+    //     this.transactions = [];
+    //     this.isLoading = false;
+    //   }
+    // }, (error) => {
+    //   console.error("Error fetching transactions:", error);
+    //   this.isLoading = false;
+    // });
+
     onValue(transactionRef, async (snapshot) => {
       if (snapshot.exists()) {
         const data = snapshot.val();
-        
+
         const promises = Object.keys(data).map(async (key) => {
+          const rawData = data[key];
           const transaction = {
             id: key,
-            ...data[key]
+            ...rawData
           } as TransactionData;
 
-          // Jika ada sms_truck_history_id, ambil data tambahan
+          // Cek apakah transaksi hari ini
+          if (!rawData.created_at || !this.isToday(rawData.created_at)) {
+            return null; // Abaikan transaksi yang bukan hari ini
+          }
+
+          // Ambil data tambahan jika ada history
           if (transaction.sms_truck_history_id) {
             const historySnapshot = await get(ref(this.database, `sms_truck_history/${transaction.sms_truck_history_id}`));
-            
             if (historySnapshot.exists()) {
               const historyData = historySnapshot.val();
-
-              // Ambil ID dari history
-              // transaction.sms_driver_id = historyData.sms_driver_id || null;
-              // transaction.sms_truck_id = historyData.sms_truck_id || null;
-              // transaction.sms_tangki_id = historyData.sms_tangki_id || null;
-
-              // // Ambil nama driver, no polisi, dan variant tangki
-              // transaction.namaDriver = this.driversMap?.[transaction.sms_driver_id]?.nama || 'N/A';
-              // transaction.nomorPolisi = this.trucksMap?.[transaction.sms_truck_id]?.variant || 'N/A';
-              // transaction.variantTangki = this.tangkisMap?.[transaction.sms_tangki_id]?.variant || 'N/A';
               const driverId = historyData.sms_driver_id;
               const truckId = historyData.sms_truck_id;
               const tangkiId = historyData.sms_tangki_id;
 
-              // Nama Driver
-              if (driverId && this.driversMap?.[driverId]) {
-                transaction.namaDriver = this.driversMap[driverId].nama || 'N/A';
-              } else {
-                transaction.namaDriver = 'N/A';
-              }
-
-              // Nomor Polisi Truck
-              if (truckId && this.trucksMap?.[truckId]) {
-                transaction.nomorPolisi = this.trucksMap[truckId].variant || 'N/A';
-              } else {
-                transaction.nomorPolisi = 'N/A';
-              }
-
-              // Variant Tangki
-              if (tangkiId && this.tangkisMap?.[tangkiId]) {
-                transaction.variantTangki = this.tangkisMap[tangkiId].variant || 'N/A';
-              } else {
-                transaction.variantTangki = 'N/A';
-              }
-
+              transaction.namaDriver = this.driversMap?.[driverId]?.nama || 'N/A';
+              transaction.nomorPolisi = this.trucksMap?.[truckId]?.variant || 'N/A';
+              transaction.variantTangki = this.tangkisMap?.[tangkiId]?.variant || 'N/A';
             } else {
-              // Jika history tidak ditemukan
               transaction.namaDriver = 'N/A';
               transaction.nomorPolisi = 'N/A';
               transaction.variantTangki = 'N/A';
             }
           } else {
-            // Jika tidak ada sms_truck_history_id
             transaction.namaDriver = 'N/A';
             transaction.nomorPolisi = 'N/A';
             transaction.variantTangki = 'N/A';
@@ -199,7 +259,10 @@ export class TransaksiAdminComponent implements OnInit, OnDestroy {
           return transaction;
         });
 
-        this.transactions = await Promise.all(promises);
+        // Tunggu semua promise, lalu filter yang null (bukan hari ini)
+        const results = await Promise.all(promises);
+        this.transactions = results.filter(t => t !== null) as TransactionData[];
+
         this.isLoading = false;
 
       } else {
