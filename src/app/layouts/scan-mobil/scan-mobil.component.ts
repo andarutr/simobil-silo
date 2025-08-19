@@ -168,7 +168,8 @@ export class ScanMobilComponent {
                   shift: this.getCurrentShift(),
                   status: 'active',
                   lokasi_terakhir: this.lokasiTerdekat,
-                  created_at: new Date().toISOString()
+                  created_at: new Date().toISOString(),
+                  scan_truck_at: new Date().toISOString()
                 });
 
                 // Tampilkan notifikasi sukses
@@ -312,7 +313,8 @@ export class ScanMobilComponent {
                 const historyRef = ref(this.database, `sms_truck_history/${this.historyKey}`);
                 await update(historyRef, {
                   sms_tangki_id: truckTangkiId,
-                  updated_at: new Date().toISOString()
+                  updated_at: new Date().toISOString(),
+                  scan_tangki_at: new Date().toISOString()
                 });
 
                 // Tampilkan notifikasi sukses

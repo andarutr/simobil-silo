@@ -211,6 +211,30 @@ export class TransaksiPulangComponent {
   async updateEndTransaction() {
     this.isScanning = true;
 
+    const { value: selectedLocation } = await Swal.fire({
+      title: 'Pilih Lokasi Tujuan',
+      input: 'radio',
+      inputOptions: {
+        'SILO_A': 'SILO A',
+        'SILO_B': 'SILO B'
+      },
+      inputValidator: (value) => {
+        if (!value) {
+          return 'Anda harus memilih lokasi tujuan!';
+        }
+        return null;
+      },
+      confirmButtonText: 'Lanjutkan ke Scan QR',
+      showCancelButton: true,
+      cancelButtonText: 'Batal',
+      allowOutsideClick: false
+    });
+
+    if (!selectedLocation) {
+      this.isScanning = false;
+      return;
+    }
+
     Swal.fire({
       title: 'Scan QR Code',
       html: `
@@ -278,7 +302,8 @@ export class TransaksiPulangComponent {
           
                     const transactionData = {
                       tiba_psg_to_pas: endTime.format("HH:mm"),
-                      durasi_psg_to_pas: `${duration} menit`
+                      durasi_psg_to_pas: `${duration} menit`,
+                      lokasi_target_driver: selectedLocation
                     };
           
                     const transactionRef = ref(this.database, `sms_transaction/${transactionKey}`);
