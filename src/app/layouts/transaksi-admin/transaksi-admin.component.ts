@@ -1,5 +1,6 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Database, ref, onValue, update, Unsubscribe, get, push, set, remove } from '@angular/fire/database';
 import Swal from 'sweetalert2';
@@ -37,16 +38,18 @@ interface TransactionData {
 @Component({
   selector: 'app-transaksi-admin',
   standalone: true,
-  imports: [CommonModule], // CommonModule untuk directive seperti *ngFor, *ngIf
+  imports: [CommonModule, FormsModule], // CommonModule untuk directive seperti *ngFor, *ngIf
   templateUrl: './transaksi-admin.component.html',
   styleUrls: ['./transaksi-admin.component.css']
 })
 export class TransaksiAdminComponent implements OnInit, OnDestroy {
   transactions: TransactionData[] = [];
+  filteredTransactions: TransactionData[] = [];
   driversMap: { [key: string]: any } = {};
   trucksMap: { [key: string]: any } = {};
   tangkisMap: { [key: string]: any } = {};
 
+  filterDate: string = '';
   private dbSubscription: Unsubscribe | undefined;
   isLoading: boolean = true;
 
@@ -68,6 +71,7 @@ export class TransaksiAdminComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.loadReferenceData().then(() => {
+        this.filterDate = moment().format('YYYY-MM-DD');
       this.loadTransactions(); // baru muat transaksi setelah referensi siap
     });
   }
@@ -229,9 +233,9 @@ export class TransaksiAdminComponent implements OnInit, OnDestroy {
           } as TransactionData;
 
           // Cek apakah transaksi hari ini
-          if (!rawData.created_at || !this.isToday(rawData.created_at)) {
-            return null; // Abaikan transaksi yang bukan hari ini
-          }
+        //   if (!rawData.created_at || !this.isToday(rawData.created_at)) {
+        //     return null; // Abaikan transaksi yang bukan hari ini
+        //   }
 
           // Ambil data tambahan jika ada history
           if (transaction.sms_truck_history_id) {
@@ -262,7 +266,7 @@ export class TransaksiAdminComponent implements OnInit, OnDestroy {
         // Tunggu semua promise, lalu filter yang null (bukan hari ini)
         const results = await Promise.all(promises);
         this.transactions = results.filter(t => t !== null) as TransactionData[];
-
+        this.applyFilter();
         this.isLoading = false;
 
       } else {
@@ -673,4 +677,25 @@ export class TransaksiAdminComponent implements OnInit, OnDestroy {
     // Tambahkan logika clear session admin jika ada
     this.router.navigate(['/login-admin']);
   }
+
+  applyFilter(): void {
+  if (!this.filterDate) {
+    const today = moment().startOf('day');
+    this.filteredTransactions = this.transactions.filter(transaction => {
+      if (!transaction.created_at) return false;
+      const transactionDate = moment(transaction.created_at);
+      return transactionDate.isSame(today, 'day');
+    });
+  } else {
+    const selectedDate = moment(this.filterDate);
+    this.filteredTransactions = this.transactions.filter(transaction => {
+      if (!transaction.created_at) return false;
+      const transactionDate = moment(transaction.created_at);
+      return transactionDate.isSame(selectedDate, 'day');
+    });
+  }
+}
+    onFilterDateChange(): void {
+        this.applyFilter();
+    }
 }
