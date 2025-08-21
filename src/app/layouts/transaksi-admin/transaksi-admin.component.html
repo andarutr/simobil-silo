@@ -3,25 +3,55 @@
     <h2>Unlock Transaksi</h2>
     <div>
       <!-- Input Filter Tanggal -->
-      <input
+      <!-- <input
         type="date"
         [(ngModel)]="filterDate"
         (ngModelChange)="onFilterDateChange()"
         class="me-2"
         style="padding: 0.375rem 0.75rem; border-radius: 0.375rem; border: 1px solid #ced4da;"
-      />
-      <button class="btn btn-primary me-2" (click)="addNewTransaction()">
+      /> -->
+      <div class="d-flex align-items-center gap-2">
+        <div class="d-flex align-items-center">
+          <label class="me-1 small text-muted">Dari:</label>
+          <input
+            type="date"
+            [(ngModel)]="startDate"
+            (ngModelChange)="onFilterDateChange()"
+            class="form-control form-control-sm"
+            style="width: auto; padding: 0.375rem 0.5rem;"
+          />
+        </div>
+        <span class="text-muted">–</span>
+        <div class="d-flex align-items-center">
+          <label class="me-1 small text-muted">Sampai:</label>
+          <input
+            type="date"
+            [(ngModel)]="endDate"
+            (ngModelChange)="onFilterDateChange()"
+            class="form-control form-control-sm"
+            style="width: auto; padding: 0.375rem 0.5rem;"
+          />
+        </div>
+      </div>
+      <button class="btn btn-primary  mt-5 me-2" (click)="addNewTransaction()">
         <i class="fas fa-plus"></i> Tambah Data
       </button>
-      <button class="btn btn-outline-danger" (click)="logoutAdmin()">
+      <button class="btn btn-outline-danger mt-5" (click)="logoutAdmin()">
         <i class="fas fa-sign-out-alt"></i> Logout
       </button>
     </div>
     
   </div>
 
-  <div *ngIf="isLoading" class="alert alert-info">
-    Memuat data transaksi...
+  <div *ngIf="isLoading" class="alert alert-info d-flex align-items-center">
+    <i class="fas fa-spinner fa-spin me-2"></i>
+    Memuat data transaksi dari server...
+  </div>
+
+  <!-- Loading saat filter diterapkan -->
+  <div *ngIf="!isLoading && isFiltering" class="alert alert-light d-flex align-items-center">
+    <i class="fas fa-filter me-2 text-primary"></i>
+    Memfilter data...
   </div>
 
   <div *ngIf="!isLoading && filteredTransactions.length === 0" class="alert alert-warning">

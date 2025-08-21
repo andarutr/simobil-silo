@@ -49,9 +49,11 @@ export class TransaksiAdminComponent implements OnInit, OnDestroy {
   trucksMap: { [key: string]: any } = {};
   tangkisMap: { [key: string]: any } = {};
 
-  filterDate: string = '';
+  startDate: string = '';
+  endDate: string = '';
   private dbSubscription: Unsubscribe | undefined;
   isLoading: boolean = true;
+  isFiltering: boolean = false;
 
   // Opsi untuk Swal unlock dan teksnya
   private unlockOptions: { [key: string]: string } = {
@@ -71,8 +73,10 @@ export class TransaksiAdminComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.loadReferenceData().then(() => {
-        this.filterDate = moment().format('YYYY-MM-DD');
-      this.loadTransactions(); // baru muat transaksi setelah referensi siap
+      const today = moment().format('YYYY-MM-DD');
+      this.startDate = today;
+      this.endDate = today;
+      this.loadTransactions(); 
     });
   }
 
@@ -679,23 +683,37 @@ export class TransaksiAdminComponent implements OnInit, OnDestroy {
   }
 
   applyFilter(): void {
-  if (!this.filterDate) {
-    const today = moment().startOf('day');
-    this.filteredTransactions = this.transactions.filter(transaction => {
-      if (!transaction.created_at) return false;
-      const transactionDate = moment(transaction.created_at);
-      return transactionDate.isSame(today, 'day');
-    });
-  } else {
-    const selectedDate = moment(this.filterDate);
-    this.filteredTransactions = this.transactions.filter(transaction => {
-      if (!transaction.created_at) return false;
-      const transactionDate = moment(transaction.created_at);
-      return transactionDate.isSame(selectedDate, 'day');
-    });
+    this.isFiltering = true; // 🔁 Mulai loading filter
+
+    // Gunakan setTimeout agar DOM sempat update (loading muncul)
+    setTimeout(() => {
+      const start = this.startDate ? moment(this.startDate) : null;
+      const end = this.endDate ? moment(this.endDate) : null;
+
+      if (!start || !end) {
+        this.filteredTransactions = [];
+        this.isFiltering = false;
+        return;
+      }
+
+      if (end.isBefore(start, 'day')) {
+        this.filteredTransactions = [];
+        this.isFiltering = false;
+        return;
+      }
+
+      this.filteredTransactions = this.transactions.filter(transaction => {
+        if (!transaction.created_at) return false;
+        const transactionDate = moment(transaction.created_at);
+        return transactionDate.isSameOrAfter(start, 'day') && 
+              transactionDate.isSameOrBefore(end, 'day');
+      });
+
+      this.isFiltering = false; // ✅ Selesai
+    }, 100); // Delay kecil agar UI merespons
   }
-}
-    onFilterDateChange(): void {
-        this.applyFilter();
-    }
+
+  onFilterDateChange(): void {
+      this.applyFilter();
+  }
 }
